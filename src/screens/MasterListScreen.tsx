@@ -1,12 +1,11 @@
 // src/screens/MasterListScreen.tsx
-
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   FlatList,
   Image,
+  Modal,
   SafeAreaView,
-  StyleSheet,
   Text,
   TextInput,
   ToastAndroid,
@@ -18,22 +17,36 @@ import {
   deleteMasterProduct,
   fetchMasterProducts,
 } from '../db/sqlite';
+import FullscreenImageModal from './FullscreenImageModal';
+import { styles } from './MasterListScreen.styles';
 
 type Props = {
   onBack: () => void;
   onEdit: (p: MasterProduct) => void;
   reloadSignal: number;
-  onScanBarcode: () => void; // ✅ 추가
+  onScanBarcode: () => void;
 };
 
 export default function MasterListScreen({
   onBack,
   onEdit,
   reloadSignal,
-  onScanBarcode, // ✅ 추가
+  onScanBarcode,
 }: Props) {
   const [items, setItems] = useState<MasterProduct[]>([]);
-  const [q, setQ] = useState('');
+  const [query, setQuery] = useState('');
+  const [draftQuery, setDraftQuery] = useState('');
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const DEBOUNCE_MS = 250;
+
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerUri, setViewerUri] = useState<string | null>(null);
+
+  const openViewer = (uri: string) => {
+    setViewerUri(uri);
+    setViewerOpen(true);
+  };
 
   const load = useCallback(async () => {
     const data = await fetchMasterProducts();
@@ -44,15 +57,49 @@ export default function MasterListScreen({
     load();
   }, [load, reloadSignal]);
 
+  useEffect(() => {
+    setDraftQuery(query);
+  }, [query]);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      if (draftQuery !== query) setQuery(draftQuery);
+    }, DEBOUNCE_MS);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [draftQuery, query]);
+
   const filtered = useMemo(() => {
-    const query = q.trim().toLowerCase();
-    if (!query) return items;
+    const raw = query.trim();
+    if (raw.length < 2) return items;
+
+    const q = raw.toLowerCase();
+    const digitsOnly = /^\d+$/.test(raw);
+
     return items.filter(it => {
       const name = (it.name ?? '').toLowerCase();
       const bc = (it.barcode ?? '').toLowerCase();
-      return name.includes(query) || bc.includes(query);
+      if (digitsOnly) return bc.includes(q);
+      return name.includes(q);
     });
-  }, [items, q]);
+  }, [items, query]);
+
+  const countText = useMemo(() => {
+    const total = items.length;
+    const shown = filtered.length;
+    const searching = query.trim().length >= 2;
+    if (!searching) return `전체 ${total}개`;
+    return `표시 ${shown}개 · 전체 ${total}개 (검색)`;
+  }, [items.length, filtered.length, query]);
+
+  const clearQuery = () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    setDraftQuery('');
+    setQuery('');
+  };
 
   const confirmDelete = (p: MasterProduct) => {
     Alert.alert(
@@ -75,149 +122,175 @@ export default function MasterListScreen({
   };
 
   const renderItem = ({ item }: { item: MasterProduct }) => {
+    const hasImg = !!item.thumbUri?.trim();
+
     return (
       <View style={styles.card}>
-        <Image
-          source={{ uri: item.thumbUri }}
-          style={styles.thumb}
-          resizeMode="contain"
-        />
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => openViewer(item.imageUri)}
+          style={styles.thumbWrap}
+        >
+          {hasImg ? (
+            <Image source={{ uri: item.thumbUri }} style={styles.thumbImg} resizeMode="cover" />
+          ) : (
+            <View style={styles.thumbPlaceholder}>
+              <Text style={styles.thumbPlaceholderText}>NO IMG</Text>
+            </View>
+          )}
+        </TouchableOpacity>
 
-        <View style={styles.meta}>
-          <Text style={styles.name} numberOfLines={1}>
+        <View style={styles.body}>
+          <Text style={styles.name} numberOfLines={2} ellipsizeMode="tail">
             {item.name}
           </Text>
-          <Text style={styles.sub} numberOfLines={1}>
-            바코드: {item.barcode ?? '-'}
-          </Text>
 
-          <View style={styles.actionsRow}>
-            <TouchableOpacity
-              style={styles.smallBtn}
-              onPress={() => onEdit(item)}
-            >
-              <Text style={styles.smallBtnText}>편집</Text>
-            </TouchableOpacity>
+          {!!item.barcode?.trim() ? (
+            <Text style={styles.barcode} numberOfLines={1} ellipsizeMode="tail">
+              #{item.barcode}
+            </Text>
+          ) : (
+            <Text style={styles.barcodeMuted} numberOfLines={1}>
+              바코드 없음
+            </Text>
+          )}
 
-            <TouchableOpacity
-              style={[styles.smallBtn, styles.delBtn]}
-              onPress={() => confirmDelete(item)}
-            >
-              <Text style={[styles.smallBtnText, styles.delText]}>삭제</Text>
-            </TouchableOpacity>
+          <View style={styles.metaCol}>
+            <Text style={styles.metaText} numberOfLines={1} ellipsizeMode="tail">
+              등록 {item.createdAt?.slice?.(0, 10) ?? '-'}
+            </Text>
           </View>
+        </View>
+
+        <View style={styles.actionsCol}>
+          <TouchableOpacity style={styles.iconBtn} onPress={() => onEdit(item)} activeOpacity={0.85}>
+            <Text style={styles.iconBtnText}>✎</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.iconBtn, styles.iconBtnDanger]}
+            onPress={() => confirmDelete(item)}
+            activeOpacity={0.85}
+          >
+            <Text style={[styles.iconBtnText, styles.iconBtnTextDanger]}>🗑</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
   };
 
+  const Empty = useMemo(() => {
+    const total = items.length;
+    const shown = filtered.length;
+    const searching = query.trim().length >= 2;
+
+    if (total === 0) {
+      return (
+        <View style={styles.emptyWrap}>
+          <Text style={styles.emptyTitle}>등록된 총상품이 없어요</Text>
+          <Text style={styles.emptyDesc}>바코드를 스캔해서 총상품을 먼저 등록해보세요.</Text>
+
+          <View style={styles.emptyBtnRow}>
+            <TouchableOpacity style={styles.primaryBtn} onPress={onScanBarcode}>
+              <Text style={styles.primaryBtnText}>바코드 스캔</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.ghostBtn} onPress={onBack}>
+              <Text style={styles.ghostBtnText}>뒤로</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      );
+    }
+
+    if (shown === 0 && searching) {
+      return (
+        <View style={styles.emptyWrap}>
+          <Text style={styles.emptyTitle}>검색 결과가 없어요</Text>
+          <Text style={styles.emptyDesc}>검색어를 지우고 다시 확인해보세요.</Text>
+
+          <View style={styles.emptyBtnRow}>
+            <TouchableOpacity style={styles.ghostBtn} onPress={clearQuery}>
+              <Text style={styles.ghostBtnText}>검색어 지우기</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.ghostBtn} onPress={onScanBarcode}>
+              <Text style={styles.ghostBtnText}>스캔</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      );
+    }
+
+    return null;
+  }, [items.length, filtered.length, query, onBack, onScanBarcode]);
+
+  const Header = (
+    <View style={styles.stickyHeader}>
+      <View style={styles.headerRow}>
+        <TouchableOpacity style={styles.backBtn} onPress={onBack} activeOpacity={0.85}>
+          <Text style={styles.backText}>←</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+          총상품 DB
+        </Text>
+
+        <View style={styles.headerRightDummy} />
+      </View>
+
+      <View style={styles.controls}>
+        <View style={styles.searchLine}>
+          <View style={styles.searchBox}>
+            <TextInput
+              value={draftQuery}
+              onChangeText={setDraftQuery}
+              placeholder="상품명 검색 (2글자 이상)"
+              placeholderTextColor="#777"
+              style={styles.searchInput}
+              returnKeyType="search"
+              textAlignVertical="center"
+            />
+            {!!draftQuery.trim() && (
+              <TouchableOpacity style={styles.searchClear} onPress={clearQuery}>
+                <Text style={styles.searchClearText}>✕</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <TouchableOpacity style={styles.scanBtn} onPress={onScanBarcode} activeOpacity={0.85}>
+            <Text style={styles.scanBtnText}>스캔</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.infoLine}>
+          <Text style={styles.countText}>{countText}</Text>
+          {query.trim().length > 0 && query.trim().length < 2 && (
+            <Text style={styles.hintText}>2글자부터 검색</Text>
+          )}
+        </View>
+      </View>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onBack}>
-          <Text style={styles.back}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>총상품 DB</Text>
-        <View style={{ width: 30 }} />
-      </View>
-
-      <View style={styles.searchRow}>
-        <TextInput
-          value={q}
-          onChangeText={setQ}
-          placeholder="상품명 / 바코드 검색"
-          placeholderTextColor="#888"
-          style={styles.input}
-        />
-        {/* ✅ 추가: 바코드 스캔 버튼 */}
-        <TouchableOpacity style={styles.scanBtn} onPress={onScanBarcode}>
-          <Text style={styles.scanBtnText}>바코드 스캔</Text>
-        </TouchableOpacity>
-      </View>
-
       <FlatList
         data={filtered}
         keyExtractor={it => String(it.id)}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
-        ListEmptyComponent={
-          <Text style={styles.empty}>등록된 총상품이 없어요.</Text>
-        }
+        ListHeaderComponent={Header}
+        stickyHeaderIndices={[0]}
+        ListEmptyComponent={Empty}
       />
+
+      <Modal
+        visible={viewerOpen}
+        transparent={false}
+        animationType="fade"
+        onRequestClose={() => setViewerOpen(false)}
+      >
+        <FullscreenImageModal uri={viewerUri ?? ''} onClose={() => setViewerOpen(false)} />
+      </Modal>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: 'black' },
-
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-  },
-  back: { color: 'white', fontSize: 26, fontWeight: '900', width: 30 },
-  title: { color: 'white', fontSize: 26, fontWeight: '900' },
-
-  searchRow: {
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-    flexDirection: 'row', // ✅ 추가: 가로 배열
-    gap: 10, // ✅ 추가: 간격
-  },
-  input: {
-    flex: 1, // ✅ 추가: 남은 공간 모두 사용
-    borderWidth: 1,
-    borderColor: '#333',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    color: 'white',
-    backgroundColor: '#111',
-  },
-  scanBtn: {
-    backgroundColor: '#333',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    justifyContent: 'center',
-  },
-  scanBtnText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-
-  list: { padding: 16, gap: 12 },
-  empty: { color: '#aaa', marginTop: 30, textAlign: 'center' },
-
-  card: {
-    flexDirection: 'row',
-    gap: 12,
-    padding: 12,
-    borderRadius: 14,
-    backgroundColor: '#111',
-    alignItems: 'center',
-  },
-  thumb: {
-    width: 86,
-    height: 86,
-    borderRadius: 12,
-    backgroundColor: '#222',
-  },
-  meta: { flex: 1 },
-  name: { color: 'white', fontSize: 20, fontWeight: '900' },
-  sub: { color: '#aaa', marginTop: 4, fontSize: 14 },
-
-  actionsRow: { flexDirection: 'row', gap: 10, marginTop: 10 },
-  smallBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  smallBtnText: { color: '#ddd', fontWeight: '800' },
-  delBtn: { borderColor: '#3a1f1f' },
-  delText: { color: '#ffb3b3' },
-});
