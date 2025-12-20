@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, BackHandler } from 'react-native';
+import { Alert, BackHandler, ToastAndroid } from 'react-native';
 
 import BarcodeScanScreen from './src/screens/BarcodeScanScreen';
 import NewProductFullScreen from './src/screens/NewProductFullScreen';
@@ -17,6 +17,7 @@ import {
   MasterProduct,
   initDb,
   getMasterByBarcode,
+  getInventoryByProductId,
   upsertMasterProduct,
   insertOrUpdateEarliestExpiry,
   updateInventoryExpiry,
@@ -25,6 +26,7 @@ import {
 } from './src/db/sqlite';
 
 import { createResizedImages } from './src/utils/imageResize';
+import { deleteInventoryItem } from './src/db/sqlite';
 
 type Step =
   | 'list'
@@ -247,10 +249,47 @@ export default function App() {
 
           const found = await getMasterByBarcode(code);
           if (found) {
-            setProductId(found.id);
-            setProductImageUri(found.imageUri);
-            setStep('expiry');
+            const inventory = await getInventoryByProductId(found.id);
+
+            if (inventory) {
+              // ✅ 기존 재고가 있는 경우: 팝업 알림
+              Alert.alert(
+                '제품 정보 확인',
+                `${found.name} 제품이 ${inventory.expiryDate} 유통기한으로 등록되어 있습니다.`,
+                [
+                  {
+                    text: '수정',
+                    onPress: () => {
+                      setEditing(inventory);
+                      setEditUri(null);
+                      setStep('edit');
+                    },
+                  },
+                  {
+                    text: '삭제',
+                    style: 'destructive',
+                    onPress: async () => {
+                      await deleteInventoryItem(inventory.inventoryId);
+                      ToastAndroid.show('재고를 삭제했습니다.', ToastAndroid.SHORT);
+                      setReloadSignal(s => s + 1);
+                      setStep('list');
+                    },
+                  },
+                  {
+                    text: '확인',
+                    style: 'cancel',
+                    onPress: () => setStep('list'),
+                  },
+                ],
+              );
+            } else {
+              // ✅ 마스터는 있지만 재고가 없는 경우: 유통기한 등록 화면으로 이동
+              setProductId(found.id);
+              setProductImageUri(found.imageUri);
+              setStep('expiry');
+            }
           } else {
+            // ✅ 마스터도 없는 경우: 새 상품 등록 화면으로 이동
             setStep('new_product_full');
           }
         }}

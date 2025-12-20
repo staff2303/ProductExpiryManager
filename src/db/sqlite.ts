@@ -222,6 +222,42 @@ export async function deleteInventoryItem(inventoryId: number) {
   await d.executeSql(`DELETE FROM inventory_items WHERE id = ?`, [inventoryId]);
 }
 
+export async function getInventoryByProductId(
+  productId: number,
+): Promise<InventoryRow | null> {
+  const d = await getDb();
+  const [res] = await d.executeSql(
+    `SELECT
+        i.id AS inventory_id,
+        i.expiry_date AS expiry_date,
+        i.created_at AS inventory_created_at,
+
+        p.id AS product_id,
+        p.barcode AS barcode,
+        p.name AS name,
+        p.image_uri AS image_uri,
+        p.thumb_uri AS thumb_uri
+     FROM inventory_items i
+     JOIN master_products p ON p.id = i.product_id
+     WHERE i.product_id = ?
+     LIMIT 1`,
+    [productId],
+  );
+
+  if (!res.rows.length) return null;
+  const row = res.rows.item(0);
+  return {
+    inventoryId: row.inventory_id,
+    expiryDate: row.expiry_date,
+    createdAt: row.inventory_created_at,
+    productId: row.product_id,
+    barcode: row.barcode,
+    name: row.name,
+    imageUri: row.image_uri,
+    thumbUri: row.thumb_uri,
+  };
+}
+
 export async function fetchInventoryWithProduct(): Promise<InventoryRow[]> {
   const d = await getDb();
   const [res] = await d.executeSql(
