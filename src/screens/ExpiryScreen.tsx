@@ -1,0 +1,244 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  Dimensions,
+  Image,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
+import Screen from '../components/Screen';
+
+type Props = {
+  uri: string;
+  mode?: 'create' | 'edit';
+  initialExpiryDate?: string; // YYYY-MM-DD
+  onBack: () => void;
+  onNext: (data: { expiryDate: string }) => void;
+  onRetakePhoto?: () => void;
+};
+
+/* ---------- 날짜 유틸 ---------- */
+function pad2(n: number) {
+  return String(n).padStart(2, '0');
+}
+function formatYMD(d: Date) {
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+function autoFormatYMD(input: string) {
+  const nums = input.replace(/\D/g, '').slice(0, 8);
+  if (nums.length <= 4) return nums;
+  if (nums.length <= 6) return `${nums.slice(0, 4)}-${nums.slice(4)}`;
+  return `${nums.slice(0, 4)}-${nums.slice(4, 6)}-${nums.slice(6)}`;
+}
+function parseYMD(s: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+  const [y, m, d] = s.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d)
+    return null;
+  dt.setHours(0, 0, 0, 0);
+  return dt;
+}
+function isPast(d: Date) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x < today;
+}
+/* ---------- 날짜 유틸 끝 ---------- */
+
+export default function ExpiryScreen({
+  uri,
+  mode = 'create',
+  initialExpiryDate = '',
+  onBack,
+  onNext,
+  onRetakePhoto,
+}: Props) {
+  const [expiryText, setExpiryText] = useState(initialExpiryDate);
+  const [showPicker, setShowPicker] = useState(false);
+
+  /* ---------- 이미지 실제 비율 계산 ---------- */
+  const [imgSize, setImgSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const screenWidth = Dimensions.get('window').width - 32; // padding 16*2
+    Image.getSize(
+      uri,
+      (w, h) => {
+        const ratio = h / w;
+        setImgSize({ width: screenWidth, height: screenWidth * ratio });
+      },
+      () => {
+        setImgSize({ width: screenWidth, height: screenWidth * 0.75 }); // fallback
+      },
+    );
+  }, [uri]);
+  /* ---------- 이미지 계산 끝 ---------- */
+
+  const parsedDate = useMemo(() => parseYMD(expiryText), [expiryText]);
+  const isPastDate = parsedDate ? isPast(parsedDate) : false;
+  const canSave = !!parsedDate;
+
+  const onPickerChange = (event: DateTimePickerEvent, selected?: Date) => {
+    if (Platform.OS === 'android') setShowPicker(false);
+    if (event.type === 'dismissed' || !selected) return;
+    setExpiryText(formatYMD(selected));
+  };
+
+  return (
+    <Screen contentStyle={{ paddingBottom: 40 }}>
+      <Text style={styles.title}>
+        {mode === 'edit' ? '유통기한 수정' : '유통기한 등록'}
+      </Text>
+
+      {imgSize && (
+        <Image
+          source={{ uri }}
+          style={[styles.photo, imgSize]}
+          resizeMode="contain"
+        />
+      )}
+
+      {mode === 'edit' && onRetakePhoto && (
+        <TouchableOpacity style={styles.retakeBtn} onPress={onRetakePhoto}>
+          <Text style={styles.retakeText}>사진 다시 찍기</Text>
+        </TouchableOpacity>
+      )}
+
+      <Text style={styles.label}>유통기한</Text>
+
+      <View style={styles.dateRow}>
+        <TextInput
+          value={expiryText}
+          onChangeText={v => setExpiryText(autoFormatYMD(v))}
+          placeholder="YYYY-MM-DD 또는 20260115"
+          style={[
+            styles.input,
+            !parsedDate && expiryText.length > 0 ? styles.inputInvalid : null,
+          ]}
+          keyboardType="number-pad"
+          maxLength={10}
+          placeholderTextColor="#888"
+        />
+        <TouchableOpacity
+          style={styles.calendarBtn}
+          onPress={() => setShowPicker(true)}
+        >
+          <Text style={styles.calendarBtnText}>📅</Text>
+        </TouchableOpacity>
+      </View>
+
+      {showPicker && (
+        <DateTimePicker
+          value={parsedDate ?? new Date()}
+          mode="date"
+          display="calendar"
+          onChange={onPickerChange}
+        />
+      )}
+
+      {isPastDate && (
+        <Text style={styles.warn}>
+          ⚠ 이미 지난 날짜입니다. 그래도 저장은 가능합니다.
+        </Text>
+      )}
+
+      <View style={styles.row}>
+        <TouchableOpacity
+          style={[styles.btn, styles.btnGhost]}
+          onPress={onBack}
+        >
+          <Text style={[styles.btnText, styles.btnGhostText]}>뒤로</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.btn, !canSave && styles.btnDisabled]}
+          onPress={() => onNext({ expiryDate: expiryText })}
+          disabled={!canSave}
+        >
+          <Text style={styles.btnText}>
+            {mode === 'edit' ? '수정 저장' : '저장'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <Text style={styles.hint}>
+        숫자만 입력해도 날짜 형식이 자동으로 맞춰집니다.
+      </Text>
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  title: { color: 'white', fontSize: 18, fontWeight: '800', marginBottom: 10 },
+
+  photo: { borderRadius: 12, backgroundColor: '#111', marginBottom: 12 },
+
+  retakeBtn: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#333',
+    marginBottom: 14,
+  },
+  retakeText: { color: '#ddd', fontWeight: '700' },
+
+  label: { color: 'white', marginBottom: 6, fontSize: 14, fontWeight: '600' },
+
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#333',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: 'white',
+    backgroundColor: '#111',
+  },
+  inputInvalid: { borderColor: '#a33' },
+
+  dateRow: { flexDirection: 'row', gap: 10, alignItems: 'center' },
+  calendarBtn: {
+    width: 48,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: 'white',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  calendarBtnText: { fontSize: 18 },
+
+  warn: { color: '#ff6b6b', marginTop: 8, fontSize: 13 },
+
+  row: { flexDirection: 'row', gap: 12, marginTop: 18 },
+  btn: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 999,
+    alignItems: 'center',
+    backgroundColor: 'white',
+  },
+  btnText: { fontSize: 16, fontWeight: '700' },
+  btnGhost: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#444',
+  },
+  btnGhostText: { color: 'white' },
+  btnDisabled: { opacity: 0.4 },
+
+  hint: { color: '#aaa', marginTop: 12, fontSize: 12 },
+});
