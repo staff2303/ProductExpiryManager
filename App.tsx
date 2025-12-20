@@ -44,7 +44,8 @@ type Step =
   | 'master_edit_camera'
   | 'master_edit_preview'
   | 'inventory_check_modal'
-  | 'master_scan'; // ✅ 추가: 마스터 상품 바코드 스캔 상태
+  | 'master_scan'
+  | 'list_scan';
 
 export default function App() {
   const [step, setStep] = useState<Step>('list');
@@ -53,6 +54,10 @@ export default function App() {
   const [inventoryToCheck, setInventoryToCheck] = useState<InventoryRow | null>(
     null,
   );
+
+  // 목록 화면 필터링
+  const [listQuery, setListQuery] = useState('');
+  const [listDateFilter, setListDateFilter] = useState<string | null>(null);
 
   // 등록 흐름(스캔)
   const [barcode, setBarcode] = useState<string | null>(null);
@@ -175,6 +180,11 @@ export default function App() {
           return (
             <ListScreen
               reloadSignal={reloadSignal}
+              query={listQuery} // ✅ 추가
+              dateFilter={listDateFilter} // ✅ 추가
+              onQueryChange={setListQuery} // ✅ 추가
+              onDateFilterChange={setListDateFilter} // ✅ 추가
+              onScanBarcode={() => setStep('list_scan')} // ✅ 추가
               onAddNew={() => setStep('scan')}
               onOpenMaster={() => setStep('master_list')}
               onEdit={item => {
@@ -335,7 +345,9 @@ export default function App() {
                 setStep('list');
               }}
               onSave={async ({ photoUri, name, expiryDate }) => {
-                const { mainUri, thumbUri } = await createResizedImages(photoUri);
+                const { mainUri, thumbUri } = await createResizedImages(
+                  photoUri,
+                );
 
                 const id = await upsertMasterProduct({
                   barcode,
@@ -414,7 +426,9 @@ export default function App() {
                 await updateInventoryExpiry(editing.inventoryId, expiryDate);
 
                 if (editUri) {
-                  const { mainUri, thumbUri } = await createResizedImages(editUri);
+                  const { mainUri, thumbUri } = await createResizedImages(
+                    editUri,
+                  );
                   await updateMasterPhoto(editing.productId, mainUri, thumbUri);
                   setMasterReload(s => s + 1);
                 }

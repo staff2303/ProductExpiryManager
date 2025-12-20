@@ -1,16 +1,21 @@
-import React, { useCallback, useEffect, useState } from 'react';
+// src/screens/ListScreen.tsx
+
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   FlatList,
   Image,
   Modal,
+  Platform,
   SafeAreaView,
   StyleSheet,
   Text,
+  TextInput,
   ToastAndroid,
   TouchableOpacity,
   View,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import {
   InventoryRow,
   deleteInventoryItem,
@@ -61,6 +66,12 @@ type Props = {
   onOpenMaster: () => void;
   onEdit: (item: InventoryRow) => void;
   reloadSignal: number;
+  // ✅ 검색 관련 props 추가
+  query: string;
+  dateFilter: string | null;
+  onQueryChange: (q: string) => void;
+  onDateFilterChange: (d: string | null) => void;
+  onScanBarcode: () => void;
 };
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
@@ -71,9 +82,15 @@ export default function ListScreen({
   onOpenMaster,
   onEdit,
   reloadSignal,
+  query,
+  dateFilter,
+  onQueryChange,
+  onDateFilterChange,
+  onScanBarcode,
 }: Props) {
   const [items, setItems] = useState<InventoryRow[]>([]);
-
+  const [originalItems, setOriginalItems] = useState<InventoryRow[]>([]); // ✅ 원본 데이터 저장
+  const [showDatePicker, setShowDatePicker] = useState(false); // ✅ 추가: 날짜 선택기 표시 상태
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerUri, setViewerUri] = useState<string | null>(null);
 
@@ -100,6 +117,7 @@ export default function ListScreen({
       return b.inventoryId - a.inventoryId;
     });
 
+    setOriginalItems(data); // ✅ 원본 데이터 저장
     setItems(data);
   }, []);
 
@@ -130,6 +148,27 @@ export default function ListScreen({
   const THUMB_W = 96;
   const MIN_H = 72;
   const MAX_H = 140;
+
+  const filteredItems = useMemo(() => {
+    let filtered = originalItems;
+
+    // 1. 텍스트 검색 (물품명/바코드)
+    const q = query.trim().toLowerCase();
+    if (q) {
+      filtered = filtered.filter(it => {
+        const name = (it.name ?? '').toLowerCase();
+        const bc = (it.barcode ?? '').toLowerCase();
+        return name.includes(q) || bc.includes(q);
+      });
+    }
+
+    // 2. 날짜 필터링 (유통기한)
+    if (dateFilter) {
+      filtered = filtered.filter(it => it.expiryDate === dateFilter);
+    }
+
+    return filtered;
+  }, [originalItems, query, dateFilter]);
 
   const renderItem = ({ item }: { item: InventoryRow }) => {
     const expired = isExpired(item.expiryDate);
@@ -190,6 +229,18 @@ export default function ListScreen({
     );
   };
 
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      const ymd = selectedDate.toISOString().slice(0, 10);
+      onDateFilterChange(ymd);
+    }
+  };
+
+  const clearDateFilter = () => {
+    onDateFilterChange(null);
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
@@ -206,13 +257,58 @@ export default function ListScreen({
         </View>
       </View>
 
+      {/* ✅ 검색 UI 추가 */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchRow}>
+          <TextInput
+            value={query}
+            onChangeText={onQueryChange}
+            placeholder="물품명 / 바코드 검색"
+            placeholderTextColor="#888"
+            style={styles.input}
+          />
+          <TouchableOpacity style={styles.scanBtn} onPress={onScanBarcode}>
+            <Text style={styles.scanBtnText}>바코드 스캔</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.dateFilterRow}>
+          <TouchableOpacity
+            style={styles.dateBtn}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text style={styles.dateBtnText}>
+              {dateFilter ? `유통기한: ${dateFilter}` : '날짜 필터 선택'}
+            </Text>
+          </TouchableOpacity>
+          {dateFilter && (
+            <TouchableOpacity style={styles.clearBtn} onPress={clearDateFilter}>
+              <Text style={styles.clearBtnText}>X</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={dateFilter ? new Date(dateFilter) : new Date()}
+          mode="date"
+          display="default"
+          onChange={handleDateChange}
+        />
+      )}
+
       <FlatList
-        data={items}
+        data={filteredItems} // ✅ 필터링된 데이터 사용
         keyExtractor={it => String(it.inventoryId)}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
-          <Text style={styles.empty}>아직 저장된 제품이 없어요.</Text>
+          <Text style={styles.empty}>
+            {originalItems.length === 0
+              ? '아직 저장된 제품이 없어요.'
+              : '검색 결과가 없어요.'}
+          </Text>
         }
       />
 
@@ -241,6 +337,51 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   title: { color: 'white', fontSize: 30, fontWeight: '800' },
+
+  // ✅ 검색 UI 스타일
+  searchContainer: { paddingHorizontal: 16, paddingBottom: 10 },
+  searchRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#333',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: 'white',
+    backgroundColor: '#111',
+  },
+  scanBtn: {
+    backgroundColor: '#333',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    justifyContent: 'center',
+  },
+  scanBtnText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  dateFilterRow: { flexDirection: 'row', gap: 10, alignItems: 'center' },
+  dateBtn: {
+    backgroundColor: '#111',
+    borderWidth: 1,
+    borderColor: '#333',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  dateBtnText: { color: 'white' },
+  clearBtn: {
+    backgroundColor: '#333',
+    borderRadius: 12,
+    width: 35,
+    height: 35,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clearBtnText: { color: 'white', fontWeight: 'bold' },
+
   addBtn: {
     paddingHorizontal: 14,
     paddingVertical: 10,
