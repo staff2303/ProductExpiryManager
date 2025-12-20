@@ -230,8 +230,8 @@ export default function ListScreen({
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(Platform.OS === 'ios');
-    if (selectedDate) {
+    setShowDatePicker(false);
+    if (event.type === 'set' && selectedDate) {
       const ymd = selectedDate.toISOString().slice(0, 10);
       onDateFilterChange(ymd);
     }
@@ -299,7 +299,7 @@ export default function ListScreen({
       )}
 
       <FlatList
-        data={filteredItems} // ✅ 필터링된 데이터 사용
+        data={filteredItems}
         keyExtractor={it => String(it.inventoryId)}
         renderItem={renderItem}
         contentContainerStyle={styles.list}

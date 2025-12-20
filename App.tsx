@@ -318,21 +318,32 @@ export default function App() {
                   const inventory = await getInventoryByProductId(found.id);
 
                   if (inventory) {
-                    // ✅ 기존 재고가 있는 경우: 커스텀 모달 표시
                     setInventoryToCheck(inventory);
                     setStep('inventory_check_modal');
                   } else {
-                    // ✅ 마스터는 있지만 재고가 없는 경우: 유통기한 등록 화면으로 이동
                     setProductId(found.id);
                     setProductImageUri(found.imageUri);
                     setStep('expiry');
                   }
                 } else {
-                  // ✅ 마스터도 없는 경우: 새 상품 등록 화면으로 이동
                   setStep('new_product_full');
                 }
               }}
             />
+          );
+        }
+
+        if (step === 'list_scan') {
+          return (
+            <View style={{ flex: 1 }}>
+              <BarcodeScanScreen
+                onBack={() => setStep('list')}
+                onScanned={code => {
+                  setListQuery(code);
+                  setStep('list');
+                }}
+              />
+            </View>
           );
         }
 
