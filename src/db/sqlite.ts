@@ -1,3 +1,4 @@
+// src/db/sqlite.ts
 import SQLite from 'react-native-sqlite-storage';
 
 SQLite.enablePromise(true);
@@ -8,20 +9,34 @@ let db: any = null;
 export async function getDb() {
   if (db) return db;
   db = await SQLite.openDatabase({ name: DB_NAME, location: 'default' });
+
+  // ✅ SQLite는 기본으로 FK가 꺼져있는 경우가 많아서 반드시 ON
+  try {
+    await db.executeSql('PRAGMA foreign_keys = ON;');
+  } catch {
+    // ignore
+  }
+
   return db;
 }
 
 /**
- * ✅ DB 날림 모드
- * - 기존 테이블 있으면 DROP
- * - 새 스키마(master_products + inventory_items) 재생성
+ * ✅ initDb
+ * - DEV(__DEV__ === true) 일 때만 DROP (개발 편의)
+ * - RELEASE에서는 DROP 절대 안 함(사용자 데이터 보호)
+ * - 테이블 생성은 IF NOT EXISTS
+ * - FK ON + ON DELETE CASCADE 적용
+ * - 인덱스 추가(성능)
  */
 export async function initDb() {
   const d = await getDb();
 
-  await d.executeSql(`DROP TABLE IF EXISTS products;`).catch(() => {});
-  await d.executeSql(`DROP TABLE IF EXISTS inventory_items;`).catch(() => {});
-  await d.executeSql(`DROP TABLE IF EXISTS master_products;`).catch(() => {});
+  // ✅ 개발 모드에서만 DB 초기화
+  if (__DEV__) {
+    await d.executeSql(`DROP TABLE IF EXISTS products;`).catch(() => {});
+    await d.executeSql(`DROP TABLE IF EXISTS inventory_items;`).catch(() => {});
+    await d.executeSql(`DROP TABLE IF EXISTS master_products;`).catch(() => {});
+  }
 
   await d.executeSql(`
     CREATE TABLE IF NOT EXISTS master_products (
@@ -40,9 +55,17 @@ export async function initDb() {
       product_id INTEGER NOT NULL UNIQUE,
       expiry_date TEXT NOT NULL,
       created_at TEXT NOT NULL,
-      FOREIGN KEY (product_id) REFERENCES master_products(id)
+      FOREIGN KEY (product_id) REFERENCES master_products(id) ON DELETE CASCADE
     );
   `);
+
+  // ✅ 조회/정렬/필터 성능 개선
+  await d.executeSql(
+    `CREATE INDEX IF NOT EXISTS idx_inventory_expiry_date ON inventory_items(expiry_date);`,
+  ).catch(() => {});
+  await d.executeSql(
+    `CREATE INDEX IF NOT EXISTS idx_master_name ON master_products(name);`,
+  ).catch(() => {});
 }
 
 /** ---------- Types ---------- */
@@ -97,6 +120,8 @@ export async function upsertMasterProduct(
 ): Promise<number> {
   const d = await getDb();
 
+  // ⚠️ barcode가 null이면 UNIQUE 충돌이 안 나서 계속 INSERT될 수 있음.
+  // 현재 앱 흐름이 "항상 바코드 있음" 전제면 OK.
   await d.executeSql(
     `INSERT INTO master_products (barcode, name, image_uri, thumb_uri, created_at)
      VALUES (?, ?, ?, ?, ?)
@@ -160,6 +185,8 @@ export async function updateMasterName(productId: number, name: string) {
 
 /**
  * ✅ 마스터 삭제 시 연결된 재고도 같이 삭제
+ * - FK + ON DELETE CASCADE가 켜져있으면 inventory_items 삭제는 사실상 생략 가능
+ * - 그래도 이중 안전으로 남겨도 무방
  */
 export async function deleteMasterProduct(productId: number) {
   const d = await getDb();
@@ -185,7 +212,6 @@ export async function insertOrUpdateEarliestExpiry(
 ): Promise<boolean> {
   const d = await getDb();
 
-  // ✅ 기존 값이 더 빠르면 유지, 새 값이 더 빠를 때만 갱신
   await d.executeSql(
     `INSERT INTO inventory_items (product_id, expiry_date, created_at)
      VALUES (?, ?, ?)
@@ -206,6 +232,11 @@ export async function insertOrUpdateEarliestExpiry(
   return check.rows.item(0).expiry_date === expiryDate;
 }
 
+/**
+ * ⚠️ 편집 시에는 "더 빠른 날짜만" 규칙을 깨뜨릴 수 있음.
+ * - 네 정책이 "언제나 가장 빠른 날짜 1개만 유지"라면,
+ *   이 함수를 쓰지 말고 insertOrUpdateEarliestExpiry로 통일하는 걸 추천.
+ */
 export async function updateInventoryExpiry(
   inventoryId: number,
   expiryDate: string,

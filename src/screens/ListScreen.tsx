@@ -159,13 +159,22 @@ export default function ListScreen({
   const filteredItems = useMemo(() => {
     let filtered = originalItems;
 
-    // 1) 텍스트 검색 (물품명/바코드)
-    const q = query.trim().toLowerCase();
+    // ✅ 검색 규칙 개선:
+    // - 숫자만 입력하면 "바코드만" 검색 (이름의 "1" 같은 검색 의도 방지)
+    // - 숫자 외 문자가 섞이면 "이름만" 검색
+    const raw = query.trim();
+    const q = raw.toLowerCase();
+    const digitsOnly = /^\d+$/.test(raw);
+
     if (q) {
       filtered = filtered.filter(it => {
         const name = (it.name ?? '').toLowerCase();
         const bc = (it.barcode ?? '').toLowerCase();
-        return name.includes(q) || bc.includes(q);
+
+        if (digitsOnly) {
+          return bc.includes(q); // ✅ 숫자만 => 바코드만
+        }
+        return name.includes(q); // ✅ 그 외 => 이름만
       });
     }
 
