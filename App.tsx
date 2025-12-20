@@ -122,6 +122,11 @@ export default function App() {
         return true;
       }
 
+      if (step === 'list_scan') {
+        setStep('list');
+        return true;
+      }
+
       if (step === 'scan') {
         setBarcode(null);
         setStep('list');
@@ -171,20 +176,20 @@ export default function App() {
     return () => sub.remove();
   }, [step]);
 
-  // 모든 화면을 감싸는 View
   return (
     <View style={{ flex: 1 }}>
-      {/* 현재 step에 해당하는 화면 렌더링 */}
       {(() => {
         if (step === 'list') {
           return (
             <ListScreen
               reloadSignal={reloadSignal}
-              query={listQuery} // ✅ 추가
-              dateFilter={listDateFilter} // ✅ 추가
-              onQueryChange={setListQuery} // ✅ 추가
-              onDateFilterChange={setListDateFilter} // ✅ 추가
-              onScanBarcode={() => setStep('list_scan')} // ✅ 추가
+              query={listQuery}
+              dateFilter={listDateFilter}
+              onQueryChange={setListQuery}
+              onDateFilterChange={d => {
+                setListDateFilter(d);
+              }}
+              onScanBarcode={() => setStep('list_scan')}
               onAddNew={() => setStep('scan')}
               onOpenMaster={() => setStep('master_list')}
               onEdit={item => {
@@ -201,7 +206,7 @@ export default function App() {
             <MasterListScreen
               reloadSignal={masterReload}
               onBack={() => setStep('list')}
-              onScanBarcode={() => setStep('master_scan')} // ✅ 추가: 바코드 스캔 버튼 콜백
+              onScanBarcode={() => setStep('master_scan')}
               onEdit={p => {
                 setEditingMaster(p);
                 setMasterEditUri(null);
@@ -218,12 +223,10 @@ export default function App() {
               onScanned={async code => {
                 const found = await getMasterByBarcode(code);
                 if (found) {
-                  // ✅ 마스터 상품이 있으면 편집 화면으로 이동
                   setEditingMaster(found);
                   setMasterEditUri(null);
                   setStep('master_edit');
                 } else {
-                  // ✅ 마스터 상품이 없으면 새 상품 등록 팝업
                   Alert.alert(
                     '상품 없음',
                     '해당 바코드의 상품이 총상품 DB에 없습니다. 새로 등록하시겠습니까?',
@@ -335,15 +338,13 @@ export default function App() {
 
         if (step === 'list_scan') {
           return (
-            <View style={{ flex: 1 }}>
-              <BarcodeScanScreen
-                onBack={() => setStep('list')}
-                onScanned={code => {
-                  setListQuery(code);
-                  setStep('list');
-                }}
-              />
-            </View>
+            <BarcodeScanScreen
+              onBack={() => setStep('list')}
+              onScanned={code => {
+                setListQuery(code);
+                setStep('list');
+              }}
+            />
           );
         }
 
@@ -356,9 +357,7 @@ export default function App() {
                 setStep('list');
               }}
               onSave={async ({ photoUri, name, expiryDate }) => {
-                const { mainUri, thumbUri } = await createResizedImages(
-                  photoUri,
-                );
+                const { mainUri, thumbUri } = await createResizedImages(photoUri);
 
                 const id = await upsertMasterProduct({
                   barcode,
@@ -405,7 +404,7 @@ export default function App() {
                     '저장 안 됨',
                     '이미 더 빠른 유통기한이 등록되어 있습니다.',
                   );
-                  return; // ✅ 화면 유지
+                  return;
                 }
 
                 setBarcode(null);
@@ -437,9 +436,7 @@ export default function App() {
                 await updateInventoryExpiry(editing.inventoryId, expiryDate);
 
                 if (editUri) {
-                  const { mainUri, thumbUri } = await createResizedImages(
-                    editUri,
-                  );
+                  const { mainUri, thumbUri } = await createResizedImages(editUri);
                   await updateMasterPhoto(editing.productId, mainUri, thumbUri);
                   setMasterReload(s => s + 1);
                 }
@@ -481,7 +478,6 @@ export default function App() {
         return null;
       })()}
 
-      {/* 재고 확인 모달 */}
       {inventoryToCheck && (
         <InventoryCheckModal
           visible={step === 'inventory_check_modal'}

@@ -6,7 +6,6 @@ import {
   FlatList,
   Image,
   Modal,
-  Platform,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -59,6 +58,15 @@ function ddayText(expiryYmd: string) {
   if (d === 0) return 'D-DAY';
   return `D-${d}`;
 }
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n));
+}
+function toYMDLocal(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 /** ---- 유틸 끝 ---- */
 
 type Props = {
@@ -66,16 +74,13 @@ type Props = {
   onOpenMaster: () => void;
   onEdit: (item: InventoryRow) => void;
   reloadSignal: number;
-  // ✅ 검색 관련 props 추가
+
   query: string;
   dateFilter: string | null;
   onQueryChange: (q: string) => void;
   onDateFilterChange: (d: string | null) => void;
   onScanBarcode: () => void;
 };
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
-}
 
 export default function ListScreen({
   onAddNew,
@@ -88,9 +93,12 @@ export default function ListScreen({
   onDateFilterChange,
   onScanBarcode,
 }: Props) {
-  const [items, setItems] = useState<InventoryRow[]>([]);
-  const [originalItems, setOriginalItems] = useState<InventoryRow[]>([]); // ✅ 원본 데이터 저장
-  const [showDatePicker, setShowDatePicker] = useState(false); // ✅ 추가: 날짜 선택기 표시 상태
+  const [originalItems, setOriginalItems] = useState<InventoryRow[]>([]);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // ✅ 표시값은 local만 사용
+  const [displayDate, setDisplayDate] = useState<string | null>(dateFilter);
+
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerUri, setViewerUri] = useState<string | null>(null);
 
@@ -117,8 +125,7 @@ export default function ListScreen({
       return b.inventoryId - a.inventoryId;
     });
 
-    setOriginalItems(data); // ✅ 원본 데이터 저장
-    setItems(data);
+    setOriginalItems(data);
   }, []);
 
   useEffect(() => {
@@ -152,7 +159,7 @@ export default function ListScreen({
   const filteredItems = useMemo(() => {
     let filtered = originalItems;
 
-    // 1. 텍스트 검색 (물품명/바코드)
+    // 1) 텍스트 검색 (물품명/바코드)
     const q = query.trim().toLowerCase();
     if (q) {
       filtered = filtered.filter(it => {
@@ -162,7 +169,7 @@ export default function ListScreen({
       });
     }
 
-    // 2. 날짜 필터링 (유통기한)
+    // 2) 날짜 필터링 (유통기한) - 실제 필터는 App의 dateFilter로 적용
     if (dateFilter) {
       filtered = filtered.filter(it => it.expiryDate === dateFilter);
     }
@@ -174,7 +181,10 @@ export default function ListScreen({
     const expired = isExpired(item.expiryDate);
     const dday = ddayText(item.expiryDate);
 
-    const keyUri = item.thumbUri;
+    const keyUri = item.thumbUri?.trim()
+      ? item.thumbUri
+      : `inv:${item.inventoryId}`;
+
     const ratio = ratios[keyUri] ?? 1;
     const thumbH = clamp(THUMB_W / ratio, MIN_H, MAX_H);
 
@@ -185,35 +195,36 @@ export default function ListScreen({
           onPress={() => openViewer(item.imageUri)}
           style={[styles.thumbWrap, { width: THUMB_W, height: thumbH }]}
         >
-          <Image
-            source={{ uri: item.thumbUri }}
-            style={styles.thumbImg}
-            resizeMode="contain"
-            onLoad={e => {
-              const w = e.nativeEvent?.source?.width;
-              const h = e.nativeEvent?.source?.height;
-              if (!w || !h) return;
-              const r = w / h;
-              setRatios(prev =>
-                prev[keyUri] ? prev : { ...prev, [keyUri]: r },
-              );
-            }}
-          />
+          {!!item.thumbUri?.trim() ? (
+            <Image
+              source={{ uri: item.thumbUri }}
+              style={styles.thumbImg}
+              resizeMode="contain"
+              onLoad={e => {
+                const w = e.nativeEvent?.source?.width;
+                const h = e.nativeEvent?.source?.height;
+                if (!w || !h) return;
+                const r = w / h;
+                setRatios(prev =>
+                  prev[keyUri] ? prev : { ...prev, [keyUri]: r },
+                );
+              }}
+            />
+          ) : (
+            <View style={styles.thumbPlaceholder}>
+              <Text style={styles.thumbPlaceholderText}>NO IMG</Text>
+            </View>
+          )}
         </TouchableOpacity>
 
         <View style={styles.meta}>
-          <Text style={[styles.dday, expired && styles.ddayExpired]}>
-            {dday}
-          </Text>
+          <Text style={[styles.dday, expired && styles.ddayExpired]}>{dday}</Text>
           <Text style={styles.name}>{item.name}</Text>
           <Text style={styles.sub}>유통기한: {item.expiryDate}</Text>
           <Text style={styles.sub}>등록: {item.createdAt.slice(0, 10)}</Text>
 
           <View style={styles.actionsRow}>
-            <TouchableOpacity
-              style={styles.smallBtn}
-              onPress={() => onEdit(item)}
-            >
+            <TouchableOpacity style={styles.smallBtn} onPress={() => onEdit(item)}>
               <Text style={styles.smallBtnText}>수정</Text>
             </TouchableOpacity>
 
@@ -230,21 +241,46 @@ export default function ListScreen({
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (event.type === 'set' && selectedDate) {
-      const ymd = selectedDate.toISOString().slice(0, 10);
-      onDateFilterChange(ymd);
+    if (event?.type === 'dismissed') {
+      setShowDatePicker(false);
+      return;
     }
+
+    const ts =
+      selectedDate?.getTime?.() ?? event?.nativeEvent?.timestamp ?? null;
+
+    if (!ts) {
+      setShowDatePicker(false);
+      return;
+    }
+
+    const ymd = toYMDLocal(new Date(ts));
+
+    // ✅ 먼저 닫기
+    setShowDatePicker(false);
+
+    // ✅ 다음 tick에 반영 (Android 렌더 꼬임 방지)
+    setTimeout(() => {
+      setDisplayDate(ymd);
+      onDateFilterChange(ymd);
+    }, 0);
+
+    ToastAndroid.show(`선택됨: ${ymd}`, ToastAndroid.SHORT);
   };
 
   const clearDateFilter = () => {
+    setDisplayDate(null);
     onDateFilterChange(null);
   };
+
+  const clearQuery = () => onQueryChange('');
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <Text style={styles.title}>제품 목록</Text>
+        <View>
+          <Text style={styles.title}>제품 목록</Text>
+        </View>
 
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <TouchableOpacity style={styles.dbBtn} onPress={onOpenMaster}>
@@ -257,7 +293,7 @@ export default function ListScreen({
         </View>
       </View>
 
-      {/* ✅ 검색 UI 추가 */}
+      {/* 검색 UI */}
       <View style={styles.searchContainer}>
         <View style={styles.searchRow}>
           <TextInput
@@ -267,6 +303,13 @@ export default function ListScreen({
             placeholderTextColor="#888"
             style={styles.input}
           />
+
+          {!!query.trim() && (
+            <TouchableOpacity style={styles.clearQueryBtn} onPress={clearQuery}>
+              <Text style={styles.clearQueryBtnText}>X</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity style={styles.scanBtn} onPress={onScanBarcode}>
             <Text style={styles.scanBtnText}>바코드 스캔</Text>
           </TouchableOpacity>
@@ -277,11 +320,16 @@ export default function ListScreen({
             style={styles.dateBtn}
             onPress={() => setShowDatePicker(true)}
           >
-            <Text style={styles.dateBtnText}>
-              {dateFilter ? `유통기한: ${dateFilter}` : '날짜 필터 선택'}
+            <Text
+              style={styles.dateBtnText}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {displayDate ? `유통기한: ${displayDate}` : '날짜 필터 선택'}
             </Text>
           </TouchableOpacity>
-          {dateFilter && (
+
+          {displayDate && (
             <TouchableOpacity style={styles.clearBtn} onPress={clearDateFilter}>
               <Text style={styles.clearBtnText}>X</Text>
             </TouchableOpacity>
@@ -291,7 +339,7 @@ export default function ListScreen({
 
       {showDatePicker && (
         <DateTimePicker
-          value={dateFilter ? new Date(dateFilter) : new Date()}
+          value={(dateFilter ? parseYMD(dateFilter) : null) ?? new Date()}
           mode="date"
           display="default"
           onChange={handleDateChange}
@@ -338,7 +386,6 @@ const styles = StyleSheet.create({
   },
   title: { color: 'white', fontSize: 30, fontWeight: '800' },
 
-  // ✅ 검색 UI 스타일
   searchContainer: { paddingHorizontal: 16, paddingBottom: 10 },
   searchRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
   input: {
@@ -351,6 +398,16 @@ const styles = StyleSheet.create({
     color: 'white',
     backgroundColor: '#111',
   },
+
+  clearQueryBtn: {
+    backgroundColor: '#333',
+    borderRadius: 12,
+    width: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clearQueryBtnText: { color: 'white', fontWeight: '900' },
+
   scanBtn: {
     backgroundColor: '#333',
     borderRadius: 12,
@@ -358,12 +415,15 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     justifyContent: 'center',
   },
-  scanBtnText: {
-    color: 'white',
-    fontWeight: 'bold',
+  scanBtnText: { color: 'white', fontWeight: 'bold' },
+
+  dateFilterRow: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
   },
-  dateFilterRow: { flexDirection: 'row', gap: 10, alignItems: 'center' },
   dateBtn: {
+    flex: 1,
     backgroundColor: '#111',
     borderWidth: 1,
     borderColor: '#333',
@@ -371,7 +431,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
-  dateBtnText: { color: 'white' },
+  dateBtnText: {
+    color: 'white',
+    flexShrink: 1,
+  },
   clearBtn: {
     backgroundColor: '#333',
     borderRadius: 12,
@@ -411,6 +474,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   thumbImg: { width: '100%', height: '100%' },
+
+  thumbPlaceholder: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  thumbPlaceholderText: { color: '#777', fontWeight: '900' },
 
   meta: { flex: 1 },
   dday: { color: 'white', fontSize: 25, fontWeight: '900' },
