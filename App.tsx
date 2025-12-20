@@ -43,12 +43,13 @@ type Step =
   | 'master_edit'
   | 'master_edit_camera'
   | 'master_edit_preview'
-  | 'inventory_check_modal'; // ✅ 추가: 모달 상태
+  | 'inventory_check_modal'
+  | 'master_scan'; // ✅ 추가: 마스터 상품 바코드 스캔 상태
 
 export default function App() {
   const [step, setStep] = useState<Step>('list');
 
-  // ✅ 추가: 재고 확인 모달
+  // 재고 확인 모달
   const [inventoryToCheck, setInventoryToCheck] = useState<InventoryRow | null>(
     null,
   );
@@ -111,6 +112,11 @@ export default function App() {
         return true;
       }
 
+      if (step === 'master_scan') {
+        setStep('master_list');
+        return true;
+      }
+
       if (step === 'scan') {
         setBarcode(null);
         setStep('list');
@@ -123,7 +129,6 @@ export default function App() {
         return true;
       }
 
-      // ✅ 추가: 모달 상태에서 뒤로가기 처리
       if (step === 'inventory_check_modal') {
         setInventoryToCheck(null);
         setStep('list');
@@ -161,7 +166,7 @@ export default function App() {
     return () => sub.remove();
   }, [step]);
 
-  // ✅ 변경: 최상위 View로 감싸고 모달을 조건부 렌더링
+  // 모든 화면을 감싸는 View
   return (
     <View style={{ flex: 1 }}>
       {/* 현재 step에 해당하는 화면 렌더링 */}
@@ -186,10 +191,44 @@ export default function App() {
             <MasterListScreen
               reloadSignal={masterReload}
               onBack={() => setStep('list')}
+              onScanBarcode={() => setStep('master_scan')} // ✅ 추가: 바코드 스캔 버튼 콜백
               onEdit={p => {
                 setEditingMaster(p);
                 setMasterEditUri(null);
                 setStep('master_edit');
+              }}
+            />
+          );
+        }
+
+        if (step === 'master_scan') {
+          return (
+            <BarcodeScanScreen
+              onBack={() => setStep('master_list')}
+              onScanned={async code => {
+                const found = await getMasterByBarcode(code);
+                if (found) {
+                  // ✅ 마스터 상품이 있으면 편집 화면으로 이동
+                  setEditingMaster(found);
+                  setMasterEditUri(null);
+                  setStep('master_edit');
+                } else {
+                  // ✅ 마스터 상품이 없으면 새 상품 등록 팝업
+                  Alert.alert(
+                    '상품 없음',
+                    '해당 바코드의 상품이 총상품 DB에 없습니다. 새로 등록하시겠습니까?',
+                    [
+                      { text: '취소', style: 'cancel' },
+                      {
+                        text: '새로 등록',
+                        onPress: () => {
+                          setBarcode(code);
+                          setStep('new_product_full');
+                        },
+                      },
+                    ],
+                  );
+                }
               }}
             />
           );
@@ -269,7 +308,7 @@ export default function App() {
                   const inventory = await getInventoryByProductId(found.id);
 
                   if (inventory) {
-                    // ✅ 변경: 기존 재고가 있는 경우 Alert 대신 커스텀 모달 표시
+                    // ✅ 기존 재고가 있는 경우: 커스텀 모달 표시
                     setInventoryToCheck(inventory);
                     setStep('inventory_check_modal');
                   } else {
@@ -417,7 +456,7 @@ export default function App() {
         return null;
       })()}
 
-      {/* ✅ 추가: 재고 확인 모달 렌더링 */}
+      {/* 재고 확인 모달 */}
       {inventoryToCheck && (
         <InventoryCheckModal
           visible={step === 'inventory_check_modal'}

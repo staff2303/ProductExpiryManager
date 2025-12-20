@@ -1,3 +1,5 @@
+// src/screens/MasterListScreen.tsx
+
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -21,12 +23,14 @@ type Props = {
   onBack: () => void;
   onEdit: (p: MasterProduct) => void;
   reloadSignal: number;
+  onScanBarcode: () => void; // ✅ 추가
 };
 
 export default function MasterListScreen({
   onBack,
   onEdit,
   reloadSignal,
+  onScanBarcode, // ✅ 추가
 }: Props) {
   const [items, setItems] = useState<MasterProduct[]>([]);
   const [q, setQ] = useState('');
@@ -125,6 +129,10 @@ export default function MasterListScreen({
           placeholderTextColor="#888"
           style={styles.input}
         />
+        {/* ✅ 추가: 바코드 스캔 버튼 */}
+        <TouchableOpacity style={styles.scanBtn} onPress={onScanBarcode}>
+          <Text style={styles.scanBtnText}>바코드 스캔</Text>
+        </TouchableOpacity>
       </View>
 
       <FlatList
@@ -152,8 +160,14 @@ const styles = StyleSheet.create({
   back: { color: 'white', fontSize: 26, fontWeight: '900', width: 30 },
   title: { color: 'white', fontSize: 26, fontWeight: '900' },
 
-  searchRow: { paddingHorizontal: 16, paddingBottom: 10 },
+  searchRow: {
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    flexDirection: 'row', // ✅ 추가: 가로 배열
+    gap: 10, // ✅ 추가: 간격
+  },
   input: {
+    flex: 1, // ✅ 추가: 남은 공간 모두 사용
     borderWidth: 1,
     borderColor: '#333',
     borderRadius: 12,
@@ -161,6 +175,17 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     color: 'white',
     backgroundColor: '#111',
+  },
+  scanBtn: {
+    backgroundColor: '#333',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    justifyContent: 'center',
+  },
+  scanBtnText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 
   list: { padding: 16, gap: 12 },
