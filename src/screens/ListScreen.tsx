@@ -1,6 +1,6 @@
 // src/screens/ListScreen.tsx
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -99,6 +99,11 @@ export default function ListScreen({
   // ✅ 표시값은 local만 사용
   const [displayDate, setDisplayDate] = useState<string | null>(dateFilter);
 
+  // ✅ 검색 디바운스용: 입력창 값(draft)
+  const [draftQuery, setDraftQuery] = useState(query);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const DEBOUNCE_MS = 250;
+
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerUri, setViewerUri] = useState<string | null>(null);
 
@@ -132,6 +137,24 @@ export default function ListScreen({
     load();
   }, [load, reloadSignal]);
 
+  // ✅ 부모(query) -> 입력창(draft) 동기화 (바코드 스캔 등 외부에서 query가 바뀔 때)
+  useEffect(() => {
+    setDraftQuery(query);
+  }, [query]);
+
+  // ✅ 디바운스 적용: draftQuery가 바뀌면 일정 시간 후 부모 query 반영
+  useEffect(() => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+
+    debounceTimerRef.current = setTimeout(() => {
+      if (draftQuery !== query) onQueryChange(draftQuery);
+    }, DEBOUNCE_MS);
+
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, [draftQuery, query, onQueryChange]);
+
   const confirmDelete = (item: InventoryRow) => {
     Alert.alert(
       '삭제할까요?',
@@ -159,32 +182,49 @@ export default function ListScreen({
   const filteredItems = useMemo(() => {
     let filtered = originalItems;
 
-    // ✅ 검색 규칙 개선:
-    // - 숫자만 입력하면 "바코드만" 검색 (이름의 "1" 같은 검색 의도 방지)
-    // - 숫자 외 문자가 섞이면 "이름만" 검색
+    // ✅ 검색 규칙
+    // - 2글자 이상일 때만 검색 적용
+    // - 숫자만 입력: 바코드만 검색
+    // - 문자 포함: 이름만 검색
     const raw = query.trim();
-    const q = raw.toLowerCase();
-    const digitsOnly = /^\d+$/.test(raw);
+    if (raw.length >= 2) {
+      const q = raw.toLowerCase();
+      const digitsOnly = /^\d+$/.test(raw);
 
-    if (q) {
       filtered = filtered.filter(it => {
         const name = (it.name ?? '').toLowerCase();
         const bc = (it.barcode ?? '').toLowerCase();
 
-        if (digitsOnly) {
-          return bc.includes(q); // ✅ 숫자만 => 바코드만
-        }
-        return name.includes(q); // ✅ 그 외 => 이름만
+        if (digitsOnly) return bc.includes(q);
+        return name.includes(q);
       });
     }
 
-    // 2) 날짜 필터링 (유통기한) - 실제 필터는 App의 dateFilter로 적용
+    // 날짜 필터링(유통기한)
     if (dateFilter) {
       filtered = filtered.filter(it => it.expiryDate === dateFilter);
     }
 
     return filtered;
   }, [originalItems, query, dateFilter]);
+
+  // ✅ 결과 개수 표시용
+  const resultCountText = useMemo(() => {
+    const total = originalItems.length;
+    const shown = filteredItems.length;
+
+    const qlen = query.trim().length;
+    const searching = qlen >= 2;
+    const filteringDate = !!dateFilter;
+
+    if (!searching && !filteringDate) return `전체 ${total}개`;
+    const parts: string[] = [];
+    parts.push(`표시 ${shown}개`);
+    parts.push(`전체 ${total}개`);
+    if (searching) parts.push(`검색`);
+    if (filteringDate) parts.push(`날짜`);
+    return `${parts[0]} · ${parts[1]} (${parts.slice(2).join('+')})`;
+  }, [originalItems.length, filteredItems.length, query, dateFilter]);
 
   const renderItem = ({ item }: { item: InventoryRow }) => {
     const expired = isExpired(item.expiryDate);
@@ -265,10 +305,8 @@ export default function ListScreen({
 
     const ymd = toYMDLocal(new Date(ts));
 
-    // ✅ 먼저 닫기
     setShowDatePicker(false);
 
-    // ✅ 다음 tick에 반영 (Android 렌더 꼬임 방지)
     setTimeout(() => {
       setDisplayDate(ymd);
       onDateFilterChange(ymd);
@@ -282,7 +320,11 @@ export default function ListScreen({
     onDateFilterChange(null);
   };
 
-  const clearQuery = () => onQueryChange('');
+  const clearQuery = () => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    setDraftQuery('');
+    onQueryChange('');
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -306,14 +348,14 @@ export default function ListScreen({
       <View style={styles.searchContainer}>
         <View style={styles.searchRow}>
           <TextInput
-            value={query}
-            onChangeText={onQueryChange}
-            placeholder="물품명 / 바코드 검색"
+            value={draftQuery}
+            onChangeText={setDraftQuery}
+            placeholder="상품명 검색 (2글자 이상)"
             placeholderTextColor="#888"
             style={styles.input}
           />
 
-          {!!query.trim() && (
+          {!!draftQuery.trim() && (
             <TouchableOpacity style={styles.clearQueryBtn} onPress={clearQuery}>
               <Text style={styles.clearQueryBtnText}>X</Text>
             </TouchableOpacity>
@@ -322,6 +364,14 @@ export default function ListScreen({
           <TouchableOpacity style={styles.scanBtn} onPress={onScanBarcode}>
             <Text style={styles.scanBtnText}>바코드 스캔</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* ✅ 결과 개수 표시 */}
+        <View style={styles.countRow}>
+          <Text style={styles.countText}>{resultCountText}</Text>
+          {query.trim().length > 0 && query.trim().length < 2 && (
+            <Text style={styles.countHintText}>검색은 2글자부터 적용</Text>
+          )}
         </View>
 
         <View style={styles.dateFilterRow}>
@@ -334,7 +384,7 @@ export default function ListScreen({
               numberOfLines={1}
               ellipsizeMode="tail"
             >
-              {displayDate ? `유통기한: ${displayDate}` : '날짜 필터 선택'}
+              {displayDate ? `유통기한: ${displayDate}` : '날짜 필터'}
             </Text>
           </TouchableOpacity>
 
@@ -396,7 +446,7 @@ const styles = StyleSheet.create({
   title: { color: 'white', fontSize: 30, fontWeight: '800' },
 
   searchContainer: { paddingHorizontal: 16, paddingBottom: 10 },
-  searchRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
+  searchRow: { flexDirection: 'row', gap: 10, marginBottom: 8 },
   input: {
     flex: 1,
     borderWidth: 1,
@@ -425,6 +475,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   scanBtnText: { color: 'white', fontWeight: 'bold' },
+
+  // ✅ 결과 개수 표시
+  countRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  countText: { color: '#bbb', fontSize: 14, fontWeight: '700' },
+  countHintText: { color: '#777', fontSize: 12, fontWeight: '700' },
 
   dateFilterRow: {
     flexDirection: 'row',
