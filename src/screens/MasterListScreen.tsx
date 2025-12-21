@@ -12,6 +12,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { AppButton } from '../components/AppButton';
+import { ScreenHeader } from '../components/ScreenHeader';
+import { SearchInput } from '../components/SearchInput';
 import {
   MasterProduct,
   deleteMasterProduct,
@@ -225,27 +228,25 @@ export default function MasterListScreen({
 
   const Header = (
     <View style={styles.stickyHeader}>
-      <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.backBtn} onPress={onBack} activeOpacity={0.85}>
-          <Text style={styles.backText}>←</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
-          총상품 DB
-        </Text>
-
-        <View style={styles.headerRightDummy} />
-      </View>
+      <ScreenHeader
+        title="총상품 DB"
+        onBack={onBack}
+        containerStyle={styles.headerRow}
+        leftStyle={styles.backBtn}
+        backTextStyle={styles.backText}
+        titleStyle={styles.title}
+        rightStyle={styles.headerRightDummy}
+      />
 
       <View style={styles.controls}>
         <View style={styles.searchLine}>
           <View style={styles.searchBox}>
-            <TextInput
+            <SearchInput
               value={draftQuery}
               onChangeText={setDraftQuery}
               placeholder="상품명 검색 (2글자 이상)"
               placeholderTextColor="#777"
-              style={styles.searchInput}
+              inputStyle={styles.searchInput}
               returnKeyType="search"
               textAlignVertical="center"
             />

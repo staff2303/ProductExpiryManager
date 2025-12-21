@@ -18,6 +18,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { AppButton } from '../components/AppButton';
+import { SearchInput } from '../components/SearchInput';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {
   InventoryRow,
@@ -472,25 +474,21 @@ export default function ListScreen({
         </Text>
 
         <View style={styles.headerBtnRow}>
-          <TouchableOpacity style={styles.dbBtn} onPress={onOpenMaster}>
-            <Text style={styles.dbText}>DB</Text>
-          </TouchableOpacity>
+          <AppButton label="DB" onPress={onOpenMaster} style={styles.dbBtn} textStyle={styles.dbText} />
 
-          <TouchableOpacity style={styles.addBtn} onPress={onAddNew}>
-            <Text style={styles.addText}>+ 추가</Text>
-          </TouchableOpacity>
+          <AppButton label="+ 추가" onPress={onAddNew} style={styles.addBtn} textStyle={styles.addText} />
         </View>
       </View>
 
       <View style={styles.controls}>
         <View style={styles.searchLine}>
           <View style={styles.searchBox}>
-            <TextInput
+            <SearchInput
               value={draftQuery}
               onChangeText={setDraftQuery}
               placeholder="상품명 검색 (2글자 이상)"
               placeholderTextColor="#777"
-              style={styles.searchInput}
+              inputStyle={styles.searchInput}
               returnKeyType="search"
               textAlignVertical="center"
             />

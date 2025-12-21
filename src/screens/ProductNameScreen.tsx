@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Image, SafeAreaView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, SafeAreaView, Text, TextInput, View } from 'react-native';
+import { AppButton } from '../components/AppButton';
 import { styles } from './ProductNameScreen.styles';
 type Props = {
   photoUri: string;
@@ -40,17 +41,20 @@ export default function ProductNameScreen({
         />
 
         <View style={styles.row}>
-          <TouchableOpacity style={[styles.btn, styles.ghost]} onPress={onBack}>
-            <Text style={[styles.btnText, styles.ghostText]}>뒤로</Text>
-          </TouchableOpacity>
+          <AppButton
+            label="뒤로"
+            onPress={onBack}
+            style={[styles.btn, styles.ghost]}
+            textStyle={[styles.btnText, styles.ghostText]}
+          />
 
-          <TouchableOpacity
-            style={[styles.btn, !canNext && styles.disabled]}
-            disabled={!canNext}
+          <AppButton
+            label="저장"
             onPress={() => onNext(name.trim())}
-          >
-            <Text style={styles.btnText}>저장</Text>
-          </TouchableOpacity>
+            disabled={!canNext}
+            style={[styles.btn, !canNext && styles.disabled]}
+            textStyle={styles.btnText}
+          />
         </View>
 
         <Text style={styles.hint}>
