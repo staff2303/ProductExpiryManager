@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {SafeAreaView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import { SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
 import {Camera, useCameraDevice} from 'react-native-vision-camera';
-
+import { styles } from './CameraScreen.styles';
 type Props = {
   onCaptured: (uri: string) => void;
 };
@@ -33,7 +33,7 @@ export default function CameraScreen({onCaptured}: Props) {
       <View style={styles.container}>
         <Camera
           ref={cameraRef}
-          style={StyleSheet.absoluteFill}
+          style={styles.camera}
           device={device}
           isActive={true}
           photo={true}
@@ -48,21 +48,3 @@ export default function CameraScreen({onCaptured}: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: {flex: 1, backgroundColor: 'black'},
-  container: {flex: 1},
-  bottomBar: {
-    position: 'absolute',
-    left: 0, right: 0, bottom: 0,
-    padding: 20,
-    alignItems: 'center',
-  },
-  btn: {
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 999,
-    backgroundColor: 'white',
-  },
-  btnText: {fontSize: 16, fontWeight: '700'},
-  center: {marginTop: 60, textAlign: 'center'},
-});
