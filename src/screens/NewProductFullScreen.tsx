@@ -297,6 +297,7 @@ const styles = StyleSheet.create({
   calendarBtnText: { fontSize: 18 },
 
   btn: {
+    paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 999,
     alignItems: 'center',
