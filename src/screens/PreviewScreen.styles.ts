@@ -1,7 +1,9 @@
+// src/screens/PreviewScreen.styles.ts
 import { StyleSheet } from 'react-native';
+import { colors } from '../ui/tokens/colors';
 
 export const styles = StyleSheet.create({
-  safe: {flex: 1, backgroundColor: 'black'},
+  safe: {flex: 1, backgroundColor: colors.black},
   container: {flex: 1},
   image: {flex: 1},
   bottomBar: {
@@ -15,9 +17,9 @@ export const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 999,
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: colors.white,
   },
   btnText: {fontSize: 16, fontWeight: '700'},
-  ghost: {backgroundColor: 'transparent', borderWidth: 1, borderColor: '#444'},
-  ghostText: {color: 'white'},
+  ghost: {backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.gray444},
+  ghostText: {color: colors.white},
 });

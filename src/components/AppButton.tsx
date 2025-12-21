@@ -1,3 +1,4 @@
+// src/components/AppButton.tsx
 import React from 'react';
 import { Pressable, StyleProp, Text, TextStyle, ViewStyle } from 'react-native';
 
@@ -10,10 +11,7 @@ type Props = {
   accessibilityLabel?: string;
 };
 
-/**
- * Thin wrapper to standardize button markup.
- * Styling is controlled by passing `style`/`textStyle` from screen styles.
- */
+// 앱 전반에서 재사용하는 버튼 UI.
 export function AppButton({
   label,
   onPress,

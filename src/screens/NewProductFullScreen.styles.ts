@@ -1,4 +1,7 @@
+// src/screens/NewProductFullScreen.styles.ts
 import { StyleSheet } from 'react-native';
+import { colors } from '../ui/tokens/colors';
+import { radius } from '../ui/tokens/radius';
 
 export const styles = StyleSheet.create({
   cameraFill: StyleSheet.absoluteFillObject,
@@ -9,15 +12,15 @@ export const styles = StyleSheet.create({
     marginBottom: 6,
   },
   backBtn: { width: 28 },
-  back: { color: 'white', fontSize: 26, fontWeight: '900', width: 28 },
-  title: { color: 'white', fontSize: 20, fontWeight: '900' },
-  barcode: { color: '#aaa', marginBottom: 10 },
+  back: { color: colors.white, fontSize: 26, fontWeight: '900', width: 28 },
+  title: { color: colors.white, fontSize: 20, fontWeight: '900' },
+  barcode: { color: colors.grayAAA, marginBottom: 10 },
 
   box: {
     width: '100%',
-    borderRadius: 12,
+    borderRadius: radius.md,
     overflow: 'hidden',
-    backgroundColor: '#111',
+    backgroundColor: colors.gray111,
     marginBottom: 12,
   },
   boxBottom: {
@@ -33,30 +36,30 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 999,
-    backgroundColor: 'white',
+    backgroundColor: colors.white,
   },
   captureText: { fontSize: 16, fontWeight: '900' },
 
   previewImage: { width: '100%', height: '100%' },
 
-  label: { color: 'white', marginBottom: 6, fontSize: 14, fontWeight: '700' },
+  label: { color: colors.white, marginBottom: 6, fontSize: 14, fontWeight: '700' },
   input: {
     borderWidth: 1,
-    borderColor: '#333',
-    borderRadius: 10,
+    borderColor: colors.gray333,
+    borderRadius: radius.sm,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    color: 'white',
-    backgroundColor: '#111',
+    color: colors.white,
+    backgroundColor: colors.gray111,
   },
-  inputInvalid: { borderColor: '#a33' },
+  inputInvalid: { borderColor: colors.invalid },
 
   dateRow: { flexDirection: 'row', gap: 10, alignItems: 'center' },
   calendarBtn: {
     width: 48,
     height: 44,
-    borderRadius: 10,
-    backgroundColor: 'white',
+    borderRadius: radius.sm,
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -67,16 +70,16 @@ export const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 999,
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: colors.white,
   },
   btnText: { fontSize: 16, fontWeight: '900' },
   ghost: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#444',
+    borderColor: colors.gray444,
   },
-  ghostText: { color: 'white' },
+  ghostText: { color: colors.white },
   disabled: { opacity: 0.4 },
 
-  hint: { color: '#aaa', marginTop: 12, fontSize: 12 },
+  hint: { color: colors.grayAAA, marginTop: 12, fontSize: 12 },
 });

@@ -1,3 +1,4 @@
+// src/components/FormRow.tsx
 import React from 'react';
 import { StyleProp, Text, TextStyle, View, ViewStyle } from 'react-native';
 
@@ -9,6 +10,7 @@ type Props = {
   contentStyle?: StyleProp<ViewStyle>;
 };
 
+// 라벨 + 입력 컨트롤을 한 줄로 묶는 폼 행.
 export function FormRow({
   label,
   children,

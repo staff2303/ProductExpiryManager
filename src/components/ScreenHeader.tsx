@@ -1,3 +1,4 @@
+// src/components/ScreenHeader.tsx
 import React from 'react';
 import { Pressable, StyleProp, Text, TextStyle, View, ViewStyle } from 'react-native';
 
@@ -13,10 +14,7 @@ type Props = {
   rightStyle?: StyleProp<ViewStyle>;
 };
 
-/**
- * Shared header row: optional back button + centered title + optional right content.
- * This helps keep screen headers consistent while still allowing per-screen styles.
- */
+// 화면 상단 타이틀/뒤로가기 헤더.
 export function ScreenHeader({
   title,
   onBack,

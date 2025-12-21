@@ -1,14 +1,17 @@
+// src/screens/MasterEditScreen.styles.ts
 import { StyleSheet } from 'react-native';
+import { colors } from '../ui/tokens/colors';
+import { radius } from '../ui/tokens/radius';
 
 export const styles = StyleSheet.create({
-  title: { color: 'white', fontSize: 18, fontWeight: '900', marginBottom: 6 },
-  sub: { color: '#aaa', marginBottom: 10 },
+  title: { color: colors.white, fontSize: 18, fontWeight: '900', marginBottom: 6 },
+  sub: { color: colors.grayAAA, marginBottom: 10 },
 
   image: {
     width: '100%',
     height: 260,
-    backgroundColor: '#111',
-    borderRadius: 12,
+    backgroundColor: colors.gray111,
+    borderRadius: radius.md,
     marginBottom: 12,
   },
 
@@ -16,22 +19,22 @@ export const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 10,
+    borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: colors.gray333,
     marginBottom: 14,
   },
-  retakeText: { color: '#ddd', fontWeight: '800' },
+  retakeText: { color: colors.grayDDD, fontWeight: '800' },
 
-  label: { color: 'white', marginBottom: 6, fontSize: 14, fontWeight: '700' },
+  label: { color: colors.white, marginBottom: 6, fontSize: 14, fontWeight: '700' },
   input: {
     borderWidth: 1,
-    borderColor: '#333',
-    borderRadius: 10,
+    borderColor: colors.gray333,
+    borderRadius: radius.sm,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    color: 'white',
-    backgroundColor: '#111',
+    color: colors.white,
+    backgroundColor: colors.gray111,
   },
 
   row: { flexDirection: 'row', gap: 12, marginTop: 18 },
@@ -40,16 +43,16 @@ export const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 999,
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: colors.white,
   },
   btnText: { fontSize: 16, fontWeight: '900' },
   ghost: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#444',
+    borderColor: colors.gray444,
   },
-  ghostText: { color: 'white' },
+  ghostText: { color: colors.white },
   disabled: { opacity: 0.4 },
 
-  hint: { color: '#aaa', marginTop: 12, fontSize: 12 },
+  hint: { color: colors.grayAAA, marginTop: 12, fontSize: 12 },
 });
