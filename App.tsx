@@ -30,25 +30,11 @@ import {
 } from './src/db/sqlite';
 
 import { createResizedImages } from './src/utils/imageResize';
+import { STEPS, type Step } from './src/navigation/steps';
 
-type Step =
-  | 'list'
-  | 'scan'
-  | 'new_product_full'
-  | 'expiry'
-  | 'edit'
-  | 'edit_camera'
-  | 'edit_preview'
-  | 'master_list'
-  | 'master_edit'
-  | 'master_edit_camera'
-  | 'master_edit_preview'
-  | 'inventory_check_modal'
-  | 'master_scan'
-  | 'list_scan';
 
 export default function App() {
-  const [step, setStep] = useState<Step>('list');
+  const [step, setStep] = useState<Step>(STEPS.LIST);
 
   // 재고 확인 모달
   const [inventoryToCheck, setInventoryToCheck] = useState<InventoryRow | null>(
@@ -85,7 +71,7 @@ export default function App() {
   // Android 뒤로가기
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (step === 'list') {
+      if (step === STEPS.LIST) {
         Alert.alert('앱 종료', '종료하시겠습니까?', [
           { text: '취소', style: 'cancel' },
           {
@@ -97,79 +83,79 @@ export default function App() {
         return true;
       }
 
-      if (step === 'master_list') {
-        setStep('list');
+      if (step === STEPS.MASTER_LIST) {
+        setStep(STEPS.LIST);
         return true;
       }
-      if (step === 'master_edit') {
+      if (step === STEPS.MASTER_EDIT) {
         setEditingMaster(null);
         setMasterEditUri(null);
-        setStep('master_list');
+        setStep(STEPS.MASTER_LIST);
         return true;
       }
-      if (step === 'master_edit_camera') {
+      if (step === STEPS.MASTER_EDIT_CAMERA) {
         setMasterEditUri(null);
-        setStep('master_edit');
+        setStep(STEPS.MASTER_EDIT);
         return true;
       }
-      if (step === 'master_edit_preview') {
-        setStep('master_edit_camera');
-        return true;
-      }
-
-      if (step === 'master_scan') {
-        setStep('master_list');
+      if (step === STEPS.MASTER_EDIT_PREVIEW) {
+        setStep(STEPS.MASTER_EDIT_CAMERA);
         return true;
       }
 
-      if (step === 'list_scan') {
-        setStep('list');
+      if (step === STEPS.MASTER_SCAN) {
+        setStep(STEPS.MASTER_LIST);
         return true;
       }
 
-      if (step === 'scan') {
+      if (step === STEPS.LIST_SCAN) {
+        setStep(STEPS.LIST);
+        return true;
+      }
+
+      if (step === STEPS.SCAN) {
         setBarcode(null);
-        setStep('list');
+        setStep(STEPS.LIST);
         return true;
       }
 
-      if (step === 'new_product_full') {
+      if (step === STEPS.NEW_PRODUCT_FULL) {
         setBarcode(null);
-        setStep('list');
+        setStep(STEPS.LIST);
         return true;
       }
 
-      if (step === 'inventory_check_modal') {
+      if (step === STEPS.INVENTORY_CHECK_MODAL) {
         setInventoryToCheck(null);
-        setStep('list');
+        setStep(STEPS.LIST);
         return true;
       }
 
-      if (step === 'expiry') {
+      if (step === STEPS.EXPIRY) {
         setBarcode(null);
         setProductId(null);
         setProductImageUri(null);
-        setStep('list');
+        setStep(STEPS.LIST);
         return true;
       }
 
-      if (step === 'edit') {
+      if (step === STEPS.EDIT) {
         setEditing(null);
         setEditUri(null);
-        setStep('list');
+        setStep(STEPS.LIST);
         return true;
       }
-      if (step === 'edit_camera') {
+      if (step === STEPS.EDIT_CAMERA) {
         setEditUri(null);
-        setStep('edit');
+        setStep(STEPS.EDIT);
         return true;
       }
-      if (step === 'edit_preview') {
-        setStep('edit_camera');
+      if (step === STEPS.EDIT_PREVIEW) {
+        setStep(STEPS.EDIT_CAMERA);
         return true;
       }
 
-      setStep('list');
+      setStep(STEPS.LIST);
       return true;
     });
 
@@ -179,7 +165,7 @@ export default function App() {
   return (
     <View style={{ flex: 1 }}>
       {(() => {
-        if (step === 'list') {
+        if (step === STEPS.LIST) {
           return (
             <ListScreen
               reloadSignal={reloadSignal}
@@ -189,43 +175,43 @@ export default function App() {
               onDateFilterChange={d => {
                 setListDateFilter(d);
               }}
-              onScanBarcode={() => setStep('list_scan')}
-              onAddNew={() => setStep('scan')}
-              onOpenMaster={() => setStep('master_list')}
+              onScanBarcode={() => setStep(STEPS.LIST_SCAN)}
+              onAddNew={() => setStep(STEPS.SCAN)}
+              onOpenMaster={() => setStep(STEPS.MASTER_LIST)}
               onEdit={item => {
                 setEditing(item);
                 setEditUri(null);
-                setStep('edit');
+                setStep(STEPS.EDIT);
               }}
             />
           );
         }
 
-        if (step === 'master_list') {
+        if (step === STEPS.MASTER_LIST) {
           return (
             <MasterListScreen
               reloadSignal={masterReload}
-              onBack={() => setStep('list')}
-              onScanBarcode={() => setStep('master_scan')}
+              onBack={() => setStep(STEPS.LIST)}
+              onScanBarcode={() => setStep(STEPS.MASTER_SCAN)}
               onEdit={p => {
                 setEditingMaster(p);
                 setMasterEditUri(null);
-                setStep('master_edit');
+                setStep(STEPS.MASTER_EDIT);
               }}
             />
           );
         }
 
-        if (step === 'master_scan') {
+        if (step === STEPS.MASTER_SCAN) {
           return (
             <BarcodeScanScreen
-              onBack={() => setStep('master_list')}
+              onBack={() => setStep(STEPS.MASTER_LIST)}
               onScanned={async code => {
                 const found = await getMasterByBarcode(code);
                 if (found) {
                   setEditingMaster(found);
                   setMasterEditUri(null);
-                  setStep('master_edit');
+                  setStep(STEPS.MASTER_EDIT);
                 } else {
                   Alert.alert(
                     '상품 없음',
@@ -236,7 +222,7 @@ export default function App() {
                         text: '새로 등록',
                         onPress: () => {
                           setBarcode(code);
-                          setStep('new_product_full');
+                          setStep(STEPS.NEW_PRODUCT_FULL);
                         },
                       },
                     ],
@@ -247,7 +233,7 @@ export default function App() {
           );
         }
 
-        if (step === 'master_edit' && editingMaster) {
+        if (step === STEPS.MASTER_EDIT && editingMaster) {
           const currentUri = masterEditUri ?? editingMaster.imageUri;
 
           return (
@@ -257,9 +243,9 @@ export default function App() {
               onBack={() => {
                 setEditingMaster(null);
                 setMasterEditUri(null);
-                setStep('master_list');
+                setStep(STEPS.MASTER_LIST);
               }}
-              onRetakePhoto={() => setStep('master_edit_camera')}
+              onRetakePhoto={() => setStep(STEPS.MASTER_EDIT_CAMERA)}
               onSave={async name => {
                 await updateMasterName(editingMaster.id, name);
 
@@ -276,42 +262,42 @@ export default function App() {
                 setMasterReload(s => s + 1);
                 setReloadSignal(s => s + 1);
 
-                setStep('master_list');
+                setStep(STEPS.MASTER_LIST);
               }}
             />
           );
         }
 
-        if (step === 'master_edit_camera' && editingMaster) {
+        if (step === STEPS.MASTER_EDIT_CAMERA && editingMaster) {
           return (
             <CameraScreen
               onCaptured={u => {
                 setMasterEditUri(u);
-                setStep('master_edit_preview');
+                setStep(STEPS.MASTER_EDIT_PREVIEW);
               }}
             />
           );
         }
 
-        if (step === 'master_edit_preview' && editingMaster && masterEditUri) {
+        if (step === STEPS.MASTER_EDIT_PREVIEW && editingMaster && masterEditUri) {
           return (
             <PreviewScreen
               uri={masterEditUri}
               onRetake={() => {
                 setMasterEditUri(null);
-                setStep('master_edit_camera');
+                setStep(STEPS.MASTER_EDIT_CAMERA);
               }}
-              onUse={() => setStep('master_edit')}
+              onUse={() => setStep(STEPS.MASTER_EDIT)}
             />
           );
         }
 
-        if (step === 'scan') {
+        if (step === STEPS.SCAN) {
           return (
             <BarcodeScanScreen
               onBack={() => {
                 setBarcode(null);
-                setStep('list');
+                setStep(STEPS.LIST);
               }}
               onScanned={async code => {
                 setBarcode(code);
@@ -322,39 +308,39 @@ export default function App() {
 
                   if (inventory) {
                     setInventoryToCheck(inventory);
-                    setStep('inventory_check_modal');
+                    setStep(STEPS.INVENTORY_CHECK_MODAL);
                   } else {
                     setProductId(found.id);
                     setProductImageUri(found.imageUri);
-                    setStep('expiry');
+                    setStep(STEPS.EXPIRY);
                   }
                 } else {
-                  setStep('new_product_full');
+                  setStep(STEPS.NEW_PRODUCT_FULL);
                 }
               }}
             />
           );
         }
 
-        if (step === 'list_scan') {
+        if (step === STEPS.LIST_SCAN) {
           return (
             <BarcodeScanScreen
-              onBack={() => setStep('list')}
+              onBack={() => setStep(STEPS.LIST)}
               onScanned={code => {
                 setListQuery(code);
-                setStep('list');
+                setStep(STEPS.LIST);
               }}
             />
           );
         }
 
-        if (step === 'new_product_full' && barcode) {
+        if (step === STEPS.NEW_PRODUCT_FULL && barcode) {
           return (
             <NewProductFullScreen
               barcode={barcode}
               onBack={() => {
                 setBarcode(null);
-                setStep('list');
+                setStep(STEPS.LIST);
               }}
               onSave={async ({ photoUri, name, expiryDate }) => {
                 const { mainUri, thumbUri } = await createResizedImages(photoUri);
@@ -380,18 +366,18 @@ export default function App() {
                 setMasterReload(s => s + 1);
                 setReloadSignal(s => s + 1);
 
-                setStep('list');
+                setStep(STEPS.LIST);
               }}
             />
           );
         }
 
-        if (step === 'expiry' && productId && productImageUri) {
+        if (step === STEPS.EXPIRY && productId && productImageUri) {
           return (
             <ExpiryScreen
               uri={productImageUri}
               mode="create"
-              onBack={() => setStep('list')}
+              onBack={() => setStep(STEPS.LIST)}
               onNext={async ({ expiryDate }) => {
                 const applied = await insertOrUpdateEarliestExpiry(
                   productId,
@@ -412,13 +398,13 @@ export default function App() {
                 setProductImageUri(null);
 
                 setReloadSignal(s => s + 1);
-                setStep('list');
+                setStep(STEPS.LIST);
               }}
             />
           );
         }
 
-        if (step === 'edit' && editing) {
+        if (step === STEPS.EDIT && editing) {
           const currentUri = editUri ?? editing.imageUri;
 
           return (
@@ -429,9 +415,9 @@ export default function App() {
               onBack={() => {
                 setEditing(null);
                 setEditUri(null);
-                setStep('list');
+                setStep(STEPS.LIST);
               }}
-              onRetakePhoto={() => setStep('edit_camera')}
+              onRetakePhoto={() => setStep(STEPS.EDIT_CAMERA)}
               onNext={async ({ expiryDate }) => {
                 await updateInventoryExpiry(editing.inventoryId, expiryDate);
 
@@ -445,32 +431,32 @@ export default function App() {
                 setEditUri(null);
 
                 setReloadSignal(s => s + 1);
-                setStep('list');
+                setStep(STEPS.LIST);
               }}
             />
           );
         }
 
-        if (step === 'edit_camera' && editing) {
+        if (step === STEPS.EDIT_CAMERA && editing) {
           return (
             <CameraScreen
               onCaptured={u => {
                 setEditUri(u);
-                setStep('edit_preview');
+                setStep(STEPS.EDIT_PREVIEW);
               }}
             />
           );
         }
 
-        if (step === 'edit_preview' && editing && editUri) {
+        if (step === STEPS.EDIT_PREVIEW && editing && editUri) {
           return (
             <PreviewScreen
               uri={editUri}
               onRetake={() => {
                 setEditUri(null);
-                setStep('edit_camera');
+                setStep(STEPS.EDIT_CAMERA);
               }}
-              onUse={() => setStep('edit')}
+              onUse={() => setStep(STEPS.EDIT)}
             />
           );
         }
@@ -480,24 +466,24 @@ export default function App() {
 
       {inventoryToCheck && (
         <InventoryCheckModal
-          visible={step === 'inventory_check_modal'}
+          visible={step === STEPS.INVENTORY_CHECK_MODAL}
           inventory={inventoryToCheck}
           onClose={() => {
             setInventoryToCheck(null);
-            setStep('list');
+            setStep(STEPS.LIST);
           }}
           onEdit={() => {
             setEditing(inventoryToCheck);
             setEditUri(null);
             setInventoryToCheck(null);
-            setStep('edit');
+            setStep(STEPS.EDIT);
           }}
           onDelete={async () => {
             await deleteInventoryItem(inventoryToCheck.inventoryId);
             ToastAndroid.show('재고를 삭제했습니다.', ToastAndroid.SHORT);
             setInventoryToCheck(null);
             setReloadSignal(s => s + 1);
-            setStep('list');
+            setStep(STEPS.LIST);
           }}
         />
       )}
