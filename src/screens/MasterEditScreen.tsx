@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, Text, TextInput, View } from 'react-native';
 import { MasterProduct } from '../db/sqlite';
 import Screen from '../components/Screen';
+import { AppButton } from '../components/AppButton';
 import { styles } from './MasterEditScreen.styles';
 type Props = {
   product: MasterProduct;
@@ -32,9 +33,12 @@ export default function MasterEditScreen({
         resizeMode="contain"
       />
 
-      <TouchableOpacity style={styles.retakeBtn} onPress={onRetakePhoto}>
-        <Text style={styles.retakeText}>사진 변경</Text>
-      </TouchableOpacity>
+      <AppButton
+        label="사진 변경"
+        onPress={onRetakePhoto}
+        style={styles.retakeBtn}
+        textStyle={styles.retakeText}
+      />
 
       <Text style={styles.label}>상품명</Text>
       <TextInput
@@ -46,17 +50,20 @@ export default function MasterEditScreen({
       />
 
       <View style={styles.row}>
-        <TouchableOpacity style={[styles.btn, styles.ghost]} onPress={onBack}>
-          <Text style={[styles.btnText, styles.ghostText]}>뒤로</Text>
-        </TouchableOpacity>
+        <AppButton
+          label="뒤로"
+          onPress={onBack}
+          style={[styles.btn, styles.ghost]}
+          textStyle={[styles.btnText, styles.ghostText]}
+        />
 
-        <TouchableOpacity
-          style={[styles.btn, !canSave && styles.disabled]}
-          disabled={!canSave}
+        <AppButton
+          label="저장"
           onPress={() => onSave(name.trim())}
-        >
-          <Text style={styles.btnText}>저장</Text>
-        </TouchableOpacity>
+          disabled={!canSave}
+          style={[styles.btn, !canSave && styles.disabled]}
+          textStyle={styles.btnText}
+        />
       </View>
 
       <Text style={styles.hint}>

@@ -4,10 +4,9 @@ import {
   Image,
   SafeAreaView,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
+import { AppButton } from '../components/AppButton';
 
 type Props = {
   uri: string;
@@ -20,9 +19,12 @@ export default function FullscreenImageModal({ uri, onClose }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.topBar}>
-        <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-          <Text style={styles.closeText}>닫기</Text>
-        </TouchableOpacity>
+        <AppButton
+          label="닫기"
+          onPress={onClose}
+          style={styles.closeBtn}
+          textStyle={styles.closeText}
+        />
       </View>
 
       <View style={styles.body}>

@@ -15,5 +15,6 @@ export const styles = StyleSheet.create({
     borderRadius: 18,
     backgroundColor: 'transparent',
   },
+  backBtn: { marginTop: 18 },
   back: { color: 'white', marginTop: 18, fontSize: 16, fontWeight: '800' },
 });

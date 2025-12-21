@@ -1,5 +1,12 @@
-import React, { useMemo, useRef, useState, useEffect } from 'react';
-import { Image, Platform, Text, TextInput, TouchableOpacity, View, ToastAndroid } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Image,
+  Platform,
+  Text,
+  TextInput,
+  ToastAndroid,
+  View,
+} from 'react-native';
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
@@ -9,6 +16,7 @@ import {
   useCameraFormat,
 } from 'react-native-vision-camera';
 import Screen from '../components/Screen';
+import { AppButton } from '../components/AppButton';
 import { styles } from './NewProductFullScreen.styles';
 /** ---------- 날짜 유틸 ---------- */
 function pad2(n: number) {
@@ -98,12 +106,12 @@ export default function NewProductFullScreen({
         <Text style={{ color: 'white', marginTop: 40 }}>
           {!device ? '카메라 장치를 찾는 중...' : '카메라 권한이 필요합니다.'}
         </Text>
-        <TouchableOpacity
-          style={[styles.btn, styles.ghost, { marginTop: 14 }]}
+        <AppButton
+          label="뒤로"
           onPress={onBack}
-        >
-          <Text style={[styles.btnText, styles.ghostText]}>뒤로</Text>
-        </TouchableOpacity>
+          style={[styles.btn, styles.ghost, { marginTop: 14 }]}
+          textStyle={[styles.btnText, styles.ghostText]}
+        />
       </Screen>
     );
   }
@@ -111,9 +119,13 @@ export default function NewProductFullScreen({
   return (
     <Screen contentStyle={{ paddingBottom: 40 }}>
       <View style={styles.topRow}>
-        <TouchableOpacity onPress={onBack}>
-          <Text style={styles.back}>←</Text>
-        </TouchableOpacity>
+        <AppButton
+          label="←"
+          onPress={onBack}
+          style={styles.backBtn}
+          textStyle={styles.back}
+          accessibilityLabel="뒤로"
+        />
         <Text style={styles.title}>새 상품 등록</Text>
         <View style={{ width: 28 }} />
       </View>
@@ -133,9 +145,12 @@ export default function NewProductFullScreen({
             resizeMode="contain"
           />
           <View style={styles.boxBottom}>
-            <TouchableOpacity style={styles.captureBtn} onPress={takePhoto}>
-              <Text style={styles.captureText}>촬영</Text>
-            </TouchableOpacity>
+            <AppButton
+              label="촬영"
+              onPress={takePhoto}
+              style={styles.captureBtn}
+              textStyle={styles.captureText}
+            />
           </View>
         </View>
       ) : (
@@ -146,12 +161,12 @@ export default function NewProductFullScreen({
             resizeMode="contain"
           />
           <View style={styles.boxBottom}>
-            <TouchableOpacity
-              style={[styles.btn, styles.ghost]}
+            <AppButton
+              label="다시 찍기"
               onPress={() => setPhotoUri(null)}
-            >
-              <Text style={[styles.btnText, styles.ghostText]}>다시 찍기</Text>
-            </TouchableOpacity>
+              style={[styles.btn, styles.ghost]}
+              textStyle={[styles.btnText, styles.ghostText]}
+            />
           </View>
         </View>
       )}
@@ -180,12 +195,13 @@ export default function NewProductFullScreen({
           keyboardType="number-pad"
           maxLength={10}
         />
-        <TouchableOpacity
-          style={styles.calendarBtn}
+        <AppButton
+          label="📅"
           onPress={() => setShowPicker(true)}
-        >
-          <Text style={styles.calendarBtnText}>📅</Text>
-        </TouchableOpacity>
+          style={styles.calendarBtn}
+          textStyle={styles.calendarBtnText}
+          accessibilityLabel="달력 열기"
+        />
       </View>
 
       {showPicker && (
@@ -198,9 +214,11 @@ export default function NewProductFullScreen({
       )}
 
       <View style={{ marginTop: 18 }}>
-        <TouchableOpacity
-          style={[styles.btn, !canSave && styles.disabled]}
+        <AppButton
+          label={saving ? '저장 중...' : '저장'}
           disabled={!canSave}
+          style={[styles.btn, !canSave && styles.disabled]}
+          textStyle={styles.btnText}
           onPress={async () => {
             if (!photoUri || !parsedDate) return;
             try {
@@ -215,9 +233,7 @@ export default function NewProductFullScreen({
               setSaving(false);
             }
           }}
-        >
-          <Text style={styles.btnText}>{saving ? '저장 중...' : '저장'}</Text>
-        </TouchableOpacity>
+        />
       </View>
 
       <Text style={styles.hint}>

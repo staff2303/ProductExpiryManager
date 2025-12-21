@@ -5,6 +5,7 @@ import {
   useCameraDevice,
   useCodeScanner,
 } from 'react-native-vision-camera';
+import { AppButton } from '../components/AppButton';
 import { styles } from './BarcodeScanScreen.styles';
 
 type Props = {
@@ -59,9 +60,12 @@ export default function BarcodeScanScreen({ onBack, onScanned }: Props) {
         <View style={styles.overlay}>
           <Text style={styles.title}>바코드를 중앙에 맞춰주세요</Text>
           <View style={styles.frame} />
-          <Text style={styles.back} onPress={onBack}>
-            ← 뒤로
-          </Text>
+          <AppButton
+            label="← 뒤로"
+            onPress={onBack}
+            style={styles.backBtn}
+            textStyle={styles.back}
+          />
         </View>
       </View>
     </SafeAreaView>

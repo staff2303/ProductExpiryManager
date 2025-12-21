@@ -1,5 +1,6 @@
 import React from 'react';
-import { Image, SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
+import { Image, SafeAreaView, View } from 'react-native';
+import { AppButton } from '../components/AppButton';
 import { styles } from './PreviewScreen.styles';
 type Props = {
   uri: string;
@@ -14,13 +15,20 @@ export default function PreviewScreen({uri, onRetake, onUse}: Props) {
         <Image source={{uri}} style={styles.image} resizeMode="contain" />
         <View style={styles.bottomBar}>
           <View style={styles.row}>
-            <TouchableOpacity style={[styles.btn, styles.ghost]} onPress={onRetake}>
-              <Text style={[styles.btnText, styles.ghostText]}>다시 찍기</Text>
-            </TouchableOpacity>
+            <AppButton
+              label="다시 찍기"
+              onPress={onRetake}
+              style={[styles.btn, styles.ghost]}
+              textStyle={[styles.btnText, styles.ghostText]}
+            />
 
-            <TouchableOpacity style={styles.btn} onPress={onUse}>
-              <Text style={styles.btnText}>이 사진 사용</Text>
-            </TouchableOpacity>
+            <AppButton
+              label="이 사진 사용"
+              onPress={onUse ?? (() => {})}
+              disabled={!onUse}
+              style={styles.btn}
+              textStyle={styles.btnText}
+            />
           </View>
         </View>
       </View>

@@ -1,12 +1,13 @@
-import React, {useEffect, useRef, useState} from 'react';
-import { SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
-import {Camera, useCameraDevice} from 'react-native-vision-camera';
+import React, { useEffect, useRef, useState } from 'react';
+import { SafeAreaView, Text, View } from 'react-native';
+import { Camera, useCameraDevice } from 'react-native-vision-camera';
+import { AppButton } from '../components/AppButton';
 import { styles } from './CameraScreen.styles';
 type Props = {
   onCaptured: (uri: string) => void;
 };
 
-export default function CameraScreen({onCaptured}: Props) {
+export default function CameraScreen({ onCaptured }: Props) {
   const device = useCameraDevice('back');
   const cameraRef = useRef<Camera>(null);
   const [hasPermission, setHasPermission] = useState(false);
@@ -25,8 +26,10 @@ export default function CameraScreen({onCaptured}: Props) {
     onCaptured(`file://${photo.path}`);
   };
 
-  if (!device) return <Text style={styles.center}>카메라 장치를 찾는 중...</Text>;
-  if (!hasPermission) return <Text style={styles.center}>카메라 권한이 필요합니다.</Text>;
+  if (!device)
+    return <Text style={styles.center}>카메라 장치를 찾는 중...</Text>;
+  if (!hasPermission)
+    return <Text style={styles.center}>카메라 권한이 필요합니다.</Text>;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -39,9 +42,12 @@ export default function CameraScreen({onCaptured}: Props) {
           photo={true}
         />
         <View style={styles.bottomBar}>
-          <TouchableOpacity style={styles.btn} onPress={takePhoto}>
-            <Text style={styles.btnText}>촬영</Text>
-          </TouchableOpacity>
+          <AppButton
+            label="촬영"
+            onPress={takePhoto}
+            style={styles.btn}
+            textStyle={styles.btnText}
+          />
         </View>
       </View>
     </SafeAreaView>

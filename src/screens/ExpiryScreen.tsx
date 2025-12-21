@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Dimensions, Image, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Image, Platform, Text, TextInput, View } from 'react-native';
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import Screen from '../components/Screen';
+import { AppButton } from '../components/AppButton';
 import { styles } from './ExpiryScreen.styles';
 type Props = {
   uri: string;
@@ -102,9 +103,12 @@ export default function ExpiryScreen({
       )}
 
       {mode === 'edit' && onRetakePhoto && (
-        <TouchableOpacity style={styles.retakeBtn} onPress={onRetakePhoto}>
-          <Text style={styles.retakeText}>사진 다시 찍기</Text>
-        </TouchableOpacity>
+        <AppButton
+          label="사진 다시 찍기"
+          onPress={onRetakePhoto}
+          style={styles.retakeBtn}
+          textStyle={styles.retakeText}
+        />
       )}
 
       <Text style={styles.label}>유통기한</Text>
@@ -122,12 +126,13 @@ export default function ExpiryScreen({
           maxLength={10}
           placeholderTextColor="#888"
         />
-        <TouchableOpacity
-          style={styles.calendarBtn}
+        <AppButton
+          label="📅"
           onPress={() => setShowPicker(true)}
-        >
-          <Text style={styles.calendarBtnText}>📅</Text>
-        </TouchableOpacity>
+          style={styles.calendarBtn}
+          textStyle={styles.calendarBtnText}
+          accessibilityLabel="달력 열기"
+        />
       </View>
 
       {showPicker && (
@@ -146,22 +151,20 @@ export default function ExpiryScreen({
       )}
 
       <View style={styles.row}>
-        <TouchableOpacity
-          style={[styles.btn, styles.btnGhost]}
+        <AppButton
+          label="뒤로"
           onPress={onBack}
-        >
-          <Text style={[styles.btnText, styles.btnGhostText]}>뒤로</Text>
-        </TouchableOpacity>
+          style={[styles.btn, styles.btnGhost]}
+          textStyle={[styles.btnText, styles.btnGhostText]}
+        />
 
-        <TouchableOpacity
-          style={[styles.btn, !canSave && styles.btnDisabled]}
+        <AppButton
+          label={mode === 'edit' ? '수정 저장' : '저장'}
           onPress={() => onNext({ expiryDate: expiryText })}
           disabled={!canSave}
-        >
-          <Text style={styles.btnText}>
-            {mode === 'edit' ? '수정 저장' : '저장'}
-          </Text>
-        </TouchableOpacity>
+          style={[styles.btn, !canSave && styles.btnDisabled]}
+          textStyle={styles.btnText}
+        />
       </View>
 
       <Text style={styles.hint}>

@@ -8,6 +8,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 6,
   },
+  backBtn: { width: 28 },
   back: { color: 'white', fontSize: 26, fontWeight: '900', width: 28 },
   title: { color: 'white', fontSize: 20, fontWeight: '900' },
   barcode: { color: '#aaa', marginBottom: 10 },
