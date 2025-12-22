@@ -33,7 +33,12 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.gray22,
   },
-  backText: { color: colors.white, fontSize: is(22), lineHeight: is(22), fontWeight: '900' },
+  backText: {
+    color: colors.white,
+    fontSize: is(22),
+    lineHeight: is(22),
+    fontWeight: '900',
+  },
 
   title: { color: colors.white, fontSize: fs(24), fontWeight: '900' },
 
@@ -70,7 +75,12 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.gray1D,
   },
-  searchClearText: { color: colors.grayCF, fontWeight: '900', fontSize: is(18), lineHeight: is(18) },
+  searchClearText: {
+    color: colors.grayCF,
+    fontWeight: '900',
+    fontSize: is(18),
+    lineHeight: is(18),
+  },
 
   scanBtn: {
     paddingHorizontal: M.pillPadX,
@@ -84,11 +94,64 @@ export const styles = StyleSheet.create({
   },
   scanBtnText: { color: colors.white, fontWeight: '900', fontSize: fs(16) },
 
-  infoLine: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  infoLine: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   countText: { color: colors.grayBD, fontSize: fs(13), fontWeight: '800' },
   hintText: { color: colors.gray666, fontSize: fs(12), fontWeight: '800' },
 
-  list: { paddingHorizontal: sp(16), paddingTop: sp(10), paddingBottom: sp(18), gap: sp(10) },
+  // ✅ DB 백업/불러오기
+  backupRow: {
+    flexDirection: 'row',
+    gap: sp(10),
+    alignItems: 'center',
+    marginTop: sp(2),
+  },
+
+  backupBtn: {
+    flex: 1,
+    paddingHorizontal: M.pillPadX,
+    paddingVertical: M.pillPadY,
+    borderRadius: sp(14),
+    backgroundColor: colors.gray1B, // scanBtn 톤
+    borderWidth: 1,
+    borderColor: colors.gray2B,
+    minHeight: M.inputH,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backupBtnText: {
+    color: colors.white,
+    fontWeight: '900',
+    fontSize: fs(16),
+  },
+
+  restoreBtn: {
+    flex: 1,
+    paddingHorizontal: M.pillPadX,
+    paddingVertical: M.pillPadY,
+    borderRadius: sp(14),
+    backgroundColor: colors.gray17, // ghostBtn 톤
+    borderWidth: 1,
+    borderColor: '#252525',
+    minHeight: M.inputH,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  restoreBtnText: {
+    color: colors.white,
+    fontWeight: '900',
+    fontSize: fs(16),
+  },
+
+  list: {
+    paddingHorizontal: sp(16),
+    paddingTop: sp(10),
+    paddingBottom: sp(18),
+    gap: sp(10),
+  },
 
   card: {
     flexDirection: 'row',
@@ -113,8 +176,17 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   thumbImg: { width: '100%', height: '100%' },
-  thumbPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
-  thumbPlaceholderText: { color: colors.gray666, fontWeight: '900', fontSize: fs(12) },
+  thumbPlaceholder: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  thumbPlaceholderText: {
+    color: colors.gray666,
+    fontWeight: '900',
+    fontSize: fs(12),
+  },
 
   body: { flex: 1, gap: sp(6) },
 
@@ -125,7 +197,12 @@ export const styles = StyleSheet.create({
   metaCol: { gap: sp(2) },
   metaText: { color: '#b0b0b0', fontSize: fs(13), fontWeight: '800' },
 
-  actionsCol: { alignSelf: 'stretch', justifyContent: 'space-between', gap: sp(8), paddingLeft: sp(4) },
+  actionsCol: {
+    alignSelf: 'stretch',
+    justifyContent: 'space-between',
+    gap: sp(8),
+    paddingLeft: sp(4),
+  },
 
   iconBtn: {
     width: M.iconBtn,
@@ -137,8 +214,16 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#252525',
   },
-  iconBtnText: { color: '#eaeaea', fontWeight: '900', fontSize: is(20), lineHeight: is(20) },
-  iconBtnDanger: { backgroundColor: '#1a0f0f', borderColor: colors.expiredBorder },
+  iconBtnText: {
+    color: '#eaeaea',
+    fontWeight: '900',
+    fontSize: is(20),
+    lineHeight: is(20),
+  },
+  iconBtnDanger: {
+    backgroundColor: '#1a0f0f',
+    borderColor: colors.expiredBorder,
+  },
   iconBtnTextDanger: { color: '#ffb3b3' },
 
   emptyWrap: {
@@ -152,7 +237,12 @@ export const styles = StyleSheet.create({
     gap: sp(10),
   },
   emptyTitle: { color: colors.white, fontSize: fs(18), fontWeight: '900' },
-  emptyDesc: { color: '#a0a0a0', fontSize: fs(14), fontWeight: '700', textAlign: 'center' },
+  emptyDesc: {
+    color: '#a0a0a0',
+    fontSize: fs(14),
+    fontWeight: '700',
+    textAlign: 'center',
+  },
 
   emptyBtnRow: { flexDirection: 'row', gap: sp(10), marginTop: sp(6) },
 

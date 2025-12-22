@@ -7,12 +7,11 @@ import {
   Modal,
   SafeAreaView,
   Text,
-  TextInput,
   ToastAndroid,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { AppButton } from '../components/AppButton';
+import RNRestart from 'react-native-restart';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { SearchInput } from '../components/SearchInput';
 import {
@@ -22,6 +21,10 @@ import {
 } from '../db/sqlite';
 import FullscreenImageModal from './FullscreenImageModal';
 import { styles } from './MasterListScreen.styles';
+import {
+  exportMasterOnlyToDownloads,
+  importMasterOnlyFromFilePicker,
+} from '../utils/backupDb';
 
 type Props = {
   onBack: () => void;
@@ -124,6 +127,54 @@ export default function MasterListScreen({
     );
   };
 
+  const onBackupPress = async () => {
+    try {
+      await exportMasterOnlyToDownloads();
+      ToastAndroid.show('백업 파일을 내보냈습니다', ToastAndroid.SHORT);
+    } catch (e: any) {
+      Alert.alert('백업 실패', e?.message ?? String(e));
+    }
+  };
+
+  const onRestorePress = () => {
+    Alert.alert('DB 불러오기', '기존 데이터가 덮어써집니다. 계속할까요?', [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '불러오기',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const ok = await importMasterOnlyFromFilePicker();
+            if (!ok) return; // 취소 등
+
+            Alert.alert(
+              '불러오기 완료',
+              '변경사항 적용을 위해 앱을 재시작합니다.',
+              [
+                {
+                  text: '확인',
+                  onPress: () => RNRestart.Restart(),
+                },
+              ],
+              { cancelable: false },
+            );
+          } catch (e: any) {
+            const msg = e?.message ?? String(e);
+            if (
+              msg.includes('cancel') ||
+              msg.includes('Canceled') ||
+              msg.includes('cancelled') ||
+              msg.includes('User canceled')
+            ) {
+              return;
+            }
+            Alert.alert('불러오기 실패', msg);
+          }
+        },
+      },
+    ]);
+  };
+
   const renderItem = ({ item }: { item: MasterProduct }) => {
     const hasImg = !!item.thumbUri?.trim();
 
@@ -135,7 +186,11 @@ export default function MasterListScreen({
           style={styles.thumbWrap}
         >
           {hasImg ? (
-            <Image source={{ uri: item.thumbUri }} style={styles.thumbImg} resizeMode="cover" />
+            <Image
+              source={{ uri: item.thumbUri }}
+              style={styles.thumbImg}
+              resizeMode="cover"
+            />
           ) : (
             <View style={styles.thumbPlaceholder}>
               <Text style={styles.thumbPlaceholderText}>NO IMG</Text>
@@ -159,14 +214,22 @@ export default function MasterListScreen({
           )}
 
           <View style={styles.metaCol}>
-            <Text style={styles.metaText} numberOfLines={1} ellipsizeMode="tail">
+            <Text
+              style={styles.metaText}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               등록 {item.createdAt?.slice?.(0, 10) ?? '-'}
             </Text>
           </View>
         </View>
 
         <View style={styles.actionsCol}>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => onEdit(item)} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={styles.iconBtn}
+            onPress={() => onEdit(item)}
+            activeOpacity={0.85}
+          >
             <Text style={styles.iconBtnText}>✎</Text>
           </TouchableOpacity>
 
@@ -175,7 +238,9 @@ export default function MasterListScreen({
             onPress={() => confirmDelete(item)}
             activeOpacity={0.85}
           >
-            <Text style={[styles.iconBtnText, styles.iconBtnTextDanger]}>🗑</Text>
+            <Text style={[styles.iconBtnText, styles.iconBtnTextDanger]}>
+              🗑
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -191,7 +256,9 @@ export default function MasterListScreen({
       return (
         <View style={styles.emptyWrap}>
           <Text style={styles.emptyTitle}>등록된 총상품이 없어요</Text>
-          <Text style={styles.emptyDesc}>바코드를 스캔해서 총상품을 먼저 등록해보세요.</Text>
+          <Text style={styles.emptyDesc}>
+            바코드를 스캔해서 총상품을 먼저 등록해보세요.
+          </Text>
 
           <View style={styles.emptyBtnRow}>
             <TouchableOpacity style={styles.primaryBtn} onPress={onScanBarcode}>
@@ -209,7 +276,9 @@ export default function MasterListScreen({
       return (
         <View style={styles.emptyWrap}>
           <Text style={styles.emptyTitle}>검색 결과가 없어요</Text>
-          <Text style={styles.emptyDesc}>검색어를 지우고 다시 확인해보세요.</Text>
+          <Text style={styles.emptyDesc}>
+            검색어를 지우고 다시 확인해보세요.
+          </Text>
 
           <View style={styles.emptyBtnRow}>
             <TouchableOpacity style={styles.ghostBtn} onPress={clearQuery}>
@@ -257,7 +326,11 @@ export default function MasterListScreen({
             )}
           </View>
 
-          <TouchableOpacity style={styles.scanBtn} onPress={onScanBarcode} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={styles.scanBtn}
+            onPress={onScanBarcode}
+            activeOpacity={0.85}
+          >
             <Text style={styles.scanBtnText}>스캔</Text>
           </TouchableOpacity>
         </View>
@@ -267,6 +340,24 @@ export default function MasterListScreen({
           {query.trim().length > 0 && query.trim().length < 2 && (
             <Text style={styles.hintText}>2글자부터 검색</Text>
           )}
+        </View>
+
+        <View style={styles.backupRow}>
+          <TouchableOpacity
+            style={styles.backupBtn}
+            activeOpacity={0.85}
+            onPress={onBackupPress}
+          >
+            <Text style={styles.backupBtnText}>백업</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.restoreBtn}
+            activeOpacity={0.85}
+            onPress={onRestorePress}
+          >
+            <Text style={styles.restoreBtnText}>불러오기</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -290,7 +381,10 @@ export default function MasterListScreen({
         animationType="fade"
         onRequestClose={() => setViewerOpen(false)}
       >
-        <FullscreenImageModal uri={viewerUri ?? ''} onClose={() => setViewerOpen(false)} />
+        <FullscreenImageModal
+          uri={viewerUri ?? ''}
+          onClose={() => setViewerOpen(false)}
+        />
       </Modal>
     </SafeAreaView>
   );

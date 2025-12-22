@@ -3,7 +3,7 @@ import SQLite from 'react-native-sqlite-storage';
 
 SQLite.enablePromise(true);
 
-const DB_NAME = 'product_expiry_v2.db';
+const DB_NAME = 'product_manager.db';
 let db: any = null;
 
 export async function getDb() {
@@ -20,6 +20,17 @@ export async function getDb() {
   return db;
 }
 
+export async function closeDb() {
+  if (!db) return;
+  try {
+    await db.close();
+  } catch {
+    // ignore
+  } finally {
+    db = null;
+  }
+}
+
 /**
  * ✅ initDb
  * - DEV(__DEV__ === true) 일 때만 DROP (개발 편의)
@@ -32,11 +43,11 @@ export async function initDb() {
   const d = await getDb();
 
   // ✅ 개발 모드에서만 DB 초기화
-  if (__DEV__) {
-    await d.executeSql(`DROP TABLE IF EXISTS products;`).catch(() => {});
-    await d.executeSql(`DROP TABLE IF EXISTS inventory_items;`).catch(() => {});
-    await d.executeSql(`DROP TABLE IF EXISTS master_products;`).catch(() => {});
-  }
+  // if (__DEV__) {
+  //   await d.executeSql(`DROP TABLE IF EXISTS products;`).catch(() => {});
+  //   await d.executeSql(`DROP TABLE IF EXISTS inventory_items;`).catch(() => {});
+  //   await d.executeSql(`DROP TABLE IF EXISTS master_products;`).catch(() => {});
+  // }
 
   await d.executeSql(`
     CREATE TABLE IF NOT EXISTS master_products (
@@ -197,14 +208,6 @@ export async function deleteMasterProduct(productId: number) {
 }
 
 /** ---------- Inventory ---------- */
-
-/**
- * ✅ 유통기한 등록 규칙
- * - 해당 상품(product_id)에 유통기한이 이미 있으면 "더 빠른 날짜"만 반영
- * - 더 느리거나 같으면 반영 안 함
- *
- * @returns true = 반영됨(신규 또는 업데이트), false = 반영 안 됨
- */
 export async function insertOrUpdateEarliestExpiry(
   productId: number,
   expiryDate: string, // YYYY-MM-DD
@@ -222,7 +225,6 @@ export async function insertOrUpdateEarliestExpiry(
     [productId, expiryDate, createdAt],
   );
 
-  // 변경이 실제로 일어났는지 판단(=현재 값이 expiryDate인지 확인)
   const [check] = await d.executeSql(
     `SELECT expiry_date FROM inventory_items WHERE product_id = ? LIMIT 1`,
     [productId],
@@ -232,11 +234,6 @@ export async function insertOrUpdateEarliestExpiry(
   return check.rows.item(0).expiry_date === expiryDate;
 }
 
-/**
- * ⚠️ 편집 시에는 "더 빠른 날짜만" 규칙을 깨뜨릴 수 있음.
- * - 네 정책이 "언제나 가장 빠른 날짜 1개만 유지"라면,
- *   이 함수를 쓰지 말고 insertOrUpdateEarliestExpiry로 통일하는 걸 추천.
- */
 export async function updateInventoryExpiry(
   inventoryId: number,
   expiryDate: string,
@@ -322,4 +319,69 @@ export async function fetchInventoryWithProduct(): Promise<InventoryRow[]> {
     });
   }
   return out;
+}
+
+/** =========================
+ * ✅ Master-only Backup/Restore
+ * - inventory_items는 절대 건드리지 않음
+ * - 기존 master는 유지 + barcode 기준 upsert(덮어쓰기)
+ * ========================= */
+
+export type MasterBackupRow = {
+  barcode: string | null;
+  name: string;
+  imageUri: string;
+  thumbUri: string;
+  createdAt: string;
+};
+
+export async function exportMasterProductsOnly(): Promise<MasterBackupRow[]> {
+  const d = await getDb();
+  const [res] = await d.executeSql(
+    `SELECT barcode, name, image_uri, thumb_uri, created_at
+     FROM master_products
+     ORDER BY id ASC`,
+  );
+
+  const out: MasterBackupRow[] = [];
+  for (let i = 0; i < res.rows.length; i++) {
+    const row = res.rows.item(i);
+    out.push({
+      barcode: row.barcode,
+      name: row.name,
+      imageUri: row.image_uri,
+      thumbUri: row.thumb_uri,
+      createdAt: row.created_at,
+    });
+  }
+  return out;
+}
+
+/**
+ * ✅ (정책 1) 기존 master 유지 + barcode 기준 upsert
+ * - barcode가 null인 row는 중복 판별이 안 되므로 안전하게 스킵
+ */
+export async function importMasterProductsOnly(rows: MasterBackupRow[]) {
+  const d = await getDb();
+
+  await d.executeSql('BEGIN TRANSACTION;');
+  try {
+    for (const r of rows) {
+      if (!r?.barcode) continue; // null barcode는 복원 제외(중복 위험)
+
+      await d.executeSql(
+        `INSERT INTO master_products (barcode, name, image_uri, thumb_uri, created_at)
+         VALUES (?, ?, ?, ?, ?)
+         ON CONFLICT(barcode) DO UPDATE SET
+           name = excluded.name,
+           image_uri = excluded.image_uri,
+           thumb_uri = excluded.thumb_uri`,
+        [r.barcode, r.name, r.imageUri, r.thumbUri, r.createdAt],
+      );
+    }
+    await d.executeSql('COMMIT;');
+  } catch (e) {
+    await d.executeSql('ROLLBACK;').catch(() => {});
+    throw e;
+  }
 }
