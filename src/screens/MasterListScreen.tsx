@@ -1,5 +1,11 @@
 // src/screens/MasterListScreen.tsx
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   Alert,
   FlatList,
@@ -255,19 +261,10 @@ export default function MasterListScreen({
     if (total === 0) {
       return (
         <View style={styles.emptyWrap}>
-          <Text style={styles.emptyTitle}>등록된 총상품이 없어요</Text>
+          <Text style={styles.emptyTitle}>등록된 상품이 없어요</Text>
           <Text style={styles.emptyDesc}>
-            바코드를 스캔해서 총상품을 먼저 등록해보세요.
+            바코드를 스캔해서 상품을 먼저 등록해보세요.
           </Text>
-
-          <View style={styles.emptyBtnRow}>
-            <TouchableOpacity style={styles.primaryBtn} onPress={onScanBarcode}>
-              <Text style={styles.primaryBtnText}>바코드 스캔</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.ghostBtn} onPress={onBack}>
-              <Text style={styles.ghostBtnText}>뒤로</Text>
-            </TouchableOpacity>
-          </View>
         </View>
       );
     }
@@ -298,7 +295,7 @@ export default function MasterListScreen({
   const Header = (
     <View style={styles.stickyHeader}>
       <ScreenHeader
-        title="총상품 DB"
+        title="보관함"
         onBack={onBack}
         containerStyle={styles.headerRow}
         leftStyle={styles.backBtn}

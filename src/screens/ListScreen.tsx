@@ -421,17 +421,14 @@ export default function ListScreen({
     if (total === 0) {
       return (
         <View style={styles.emptyWrap}>
-          <Text style={styles.emptyTitle}>아직 저장된 제품이 없어요</Text>
+          <Text style={styles.emptyTitle}>아직 등록된 제품이 없어요</Text>
           <Text style={styles.emptyDesc}>
             바코드를 스캔하거나 직접 추가해보세요.
           </Text>
 
           <View style={styles.emptyBtnRow}>
-            <TouchableOpacity style={styles.primaryBtn} onPress={onScanBarcode}>
-              <Text style={styles.primaryBtnText}>바코드 스캔</Text>
-            </TouchableOpacity>
             <TouchableOpacity style={styles.ghostBtn} onPress={onAddNew}>
-              <Text style={styles.ghostBtnText}>+ 추가</Text>
+              <Text style={styles.ghostBtnText}>등록</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -470,13 +467,23 @@ export default function ListScreen({
     <View style={styles.stickyHeader}>
       <View style={styles.headerRow}>
         <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
-          제품 목록
+          유통기한 관리
         </Text>
 
         <View style={styles.headerBtnRow}>
-          <AppButton label="DB" onPress={onOpenMaster} style={styles.dbBtn} textStyle={styles.dbText} />
+          <AppButton
+            label="보관함"
+            onPress={onOpenMaster}
+            style={styles.dbBtn}
+            textStyle={styles.dbText}
+          />
 
-          <AppButton label="+ 추가" onPress={onAddNew} style={styles.addBtn} textStyle={styles.addText} />
+          <AppButton
+            label="등록"
+            onPress={onAddNew}
+            style={styles.addBtn}
+            textStyle={styles.addText}
+          />
         </View>
       </View>
 

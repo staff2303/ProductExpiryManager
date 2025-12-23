@@ -28,7 +28,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
 
-  title: { color: colors.white, fontSize: fs(28), fontWeight: '900' },
+  title: { color: colors.white, fontSize: fs(20), fontWeight: '900' },
 
   headerBtnRow: { flexDirection: 'row', gap: sp(10) },
 
@@ -40,7 +40,7 @@ export const styles = StyleSheet.create({
     minHeight: M.pillH,
     justifyContent: 'center',
   },
-  addText: { fontWeight: '900', color: colors.black, fontSize: fs(16) },
+  addText: { fontWeight: '900', color: colors.black, fontSize: fs(14) },
 
   dbBtn: {
     paddingHorizontal: M.pillPadX,
@@ -52,7 +52,7 @@ export const styles = StyleSheet.create({
     minHeight: M.pillH,
     justifyContent: 'center',
   },
-  dbText: { color: colors.white, fontWeight: '900', fontSize: fs(16) },
+  dbText: { color: colors.white, fontWeight: '900', fontSize: fs(14) },
 
   controls: { paddingHorizontal: sp(16), gap: sp(8) },
 
@@ -85,7 +85,12 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.gray1D,
   },
-  searchClearText: { color: colors.grayCF, fontWeight: '900', fontSize: is(18), lineHeight: is(18) },
+  searchClearText: {
+    color: colors.grayCF,
+    fontWeight: '900',
+    fontSize: is(18),
+    lineHeight: is(18),
+  },
 
   scanBtn: {
     paddingHorizontal: M.pillPadX,
@@ -99,7 +104,11 @@ export const styles = StyleSheet.create({
   },
   scanBtnText: { color: colors.white, fontWeight: '900', fontSize: fs(16) },
 
-  infoLine: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  infoLine: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   countText: { color: colors.grayBD, fontSize: fs(13), fontWeight: '800' },
   hintText: { color: colors.gray666, fontSize: fs(12), fontWeight: '800' },
 
@@ -130,9 +139,19 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.gray2B,
   },
-  filterChipCloseText: { color: colors.white, fontWeight: '900', fontSize: is(18), lineHeight: is(18) },
+  filterChipCloseText: {
+    color: colors.white,
+    fontWeight: '900',
+    fontSize: is(18),
+    lineHeight: is(18),
+  },
 
-  list: { paddingHorizontal: sp(16), paddingTop: sp(10), paddingBottom: sp(18), gap: sp(10) },
+  list: {
+    paddingHorizontal: sp(16),
+    paddingTop: sp(10),
+    paddingBottom: sp(18),
+    gap: sp(10),
+  },
 
   card: {
     flexDirection: 'row',
@@ -145,7 +164,10 @@ export const styles = StyleSheet.create({
     borderColor: '#1e1e1e',
   },
 
-  cardExpired: { borderColor: colors.expiredBorder, backgroundColor: colors.expiredBg },
+  cardExpired: {
+    borderColor: colors.expiredBorder,
+    backgroundColor: colors.expiredBg,
+  },
   cardSoon: { borderColor: colors.soonBorder, backgroundColor: colors.soonBg },
 
   thumbWrap: {
@@ -158,17 +180,36 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   thumbImg: { width: '100%', height: '100%' },
-  thumbPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
-  thumbPlaceholderText: { color: colors.gray666, fontWeight: '900', fontSize: fs(12) },
+  thumbPlaceholder: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  thumbPlaceholderText: {
+    color: colors.gray666,
+    fontWeight: '900',
+    fontSize: fs(12),
+  },
 
   body: { flex: 1, gap: sp(6) },
 
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: sp(10) },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: sp(10),
+  },
 
   ddayText: { color: colors.white, fontSize: fs(20), fontWeight: '900' },
   ddayTextHot: { color: '#ffb3b3' },
 
-  chip: { paddingHorizontal: sp(10), paddingVertical: sp(7), borderRadius: 999, borderWidth: 1 },
+  chip: {
+    paddingHorizontal: sp(10),
+    paddingVertical: sp(7),
+    borderRadius: 999,
+    borderWidth: 1,
+  },
   chipText: { color: colors.white, fontWeight: '900', fontSize: fs(12) },
 
   chipExpired: { backgroundColor: '#2a0f0f', borderColor: '#4a1a1a' },
@@ -183,7 +224,12 @@ export const styles = StyleSheet.create({
   metaCol: { gap: sp(2) },
   metaText: { color: '#b0b0b0', fontSize: fs(13), fontWeight: '800' },
 
-  actionsCol: { alignSelf: 'stretch', justifyContent: 'space-between', gap: sp(8), paddingLeft: sp(4) },
+  actionsCol: {
+    alignSelf: 'stretch',
+    justifyContent: 'space-between',
+    gap: sp(8),
+    paddingLeft: sp(4),
+  },
 
   iconBtn: {
     width: M.iconBtn,
@@ -195,8 +241,16 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#252525',
   },
-  iconBtnText: { color: '#eaeaea', fontWeight: '900', fontSize: is(20), lineHeight: is(20) },
-  iconBtnDanger: { backgroundColor: '#1a0f0f', borderColor: colors.expiredBorder },
+  iconBtnText: {
+    color: '#eaeaea',
+    fontWeight: '900',
+    fontSize: is(20),
+    lineHeight: is(20),
+  },
+  iconBtnDanger: {
+    backgroundColor: '#1a0f0f',
+    borderColor: colors.expiredBorder,
+  },
   iconBtnTextDanger: { color: '#ffb3b3' },
 
   emptyWrap: {
