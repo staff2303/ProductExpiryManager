@@ -17,6 +17,10 @@ export const styles = StyleSheet.create({
     paddingBottom: sp(10),
     borderBottomWidth: 1,
     borderBottomColor: colors.gray1B,
+    // 스크롤 후 상단에 붙은 헤더가 아이템 아래로 들어가며 터치가 막히는 현상 방지
+    zIndex: 10,
+    elevation: 10,
+    position: 'relative',
   },
 
   headerRow: {

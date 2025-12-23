@@ -13,7 +13,6 @@ import {
   Modal,
   SafeAreaView,
   Text,
-  TextInput,
   ToastAndroid,
   TouchableOpacity,
   View,
@@ -454,15 +453,9 @@ export default function ListScreen({
     }
 
     return null;
-  }, [
-    originalItems.length,
-    filteredItems.length,
-    dateFilter,
-    query,
-    onAddNew,
-    onScanBarcode,
-  ]);
+  }, [originalItems.length, filteredItems.length, dateFilter, query, onAddNew]);
 
+  // ✅ 고정 헤더(FlatList 밖으로 이동)
   const Header = (
     <View style={styles.stickyHeader}>
       <View style={styles.headerRow}>
@@ -552,14 +545,16 @@ export default function ListScreen({
 
   return (
     <SafeAreaView style={styles.safe}>
+      {Header}
+
       <FlatList
+        style={{ flex: 1 }}
         data={filteredItems}
         keyExtractor={it => String(it.inventoryId)}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
-        ListHeaderComponent={Header}
-        stickyHeaderIndices={[0]}
         ListEmptyComponent={emptyNode}
+        keyboardShouldPersistTaps="handled"
       />
 
       {showDatePicker && (

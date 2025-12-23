@@ -290,8 +290,9 @@ export default function MasterListScreen({
     }
 
     return null;
-  }, [items.length, filtered.length, query, onBack, onScanBarcode]);
+  }, [items.length, filtered.length, query, onScanBarcode]);
 
+  // ✅ 고정 헤더(FlatList 밖)
   const Header = (
     <View style={styles.stickyHeader}>
       <ScreenHeader
@@ -362,14 +363,16 @@ export default function MasterListScreen({
 
   return (
     <SafeAreaView style={styles.safe}>
+      {Header}
+
       <FlatList
+        style={{ flex: 1 }}
         data={filtered}
         keyExtractor={it => String(it.id)}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
-        ListHeaderComponent={Header}
-        stickyHeaderIndices={[0]}
         ListEmptyComponent={Empty}
+        keyboardShouldPersistTaps="handled"
       />
 
       <Modal
