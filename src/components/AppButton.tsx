@@ -1,9 +1,18 @@
 // src/components/AppButton.tsx
-import React from 'react';
-import { Pressable, StyleProp, Text, TextStyle, ViewStyle } from 'react-native';
+import React, { type ReactNode } from 'react';
+import {
+  Pressable,
+  StyleProp,
+  Text,
+  TextStyle,
+  View,
+  ViewStyle,
+} from 'react-native';
 
 type Props = {
-  label: string;
+  // 아이콘-only 버튼도 허용
+  label?: string;
+  icon?: ReactNode;
   onPress?: () => void;
   onPressIn?: () => void;
   disabled?: boolean;
@@ -15,6 +24,7 @@ type Props = {
 // 앱 전반에서 재사용하는 버튼 UI.
 export function AppButton({
   label,
+  icon,
   onPress,
   disabled,
   style,
@@ -26,7 +36,7 @@ export function AppButton({
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityLabel={accessibilityLabel ?? label ?? '버튼'}
       pressRetentionOffset={{ top: 24, left: 24, right: 24, bottom: 24 }} // 취소 덜 되게
       style={({ pressed }) => [
         style as any,
@@ -34,7 +44,20 @@ export function AppButton({
         disabled ? { opacity: 0.5 } : null,
       ]}
     >
-      <Text style={textStyle}>{label}</Text>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {!!icon && (
+          <View style={{ marginRight: label ? 8 : 0 }}>
+            {icon}
+          </View>
+        )}
+        {!!label && <Text style={textStyle}>{label}</Text>}
+      </View>
     </Pressable>
   );
 }

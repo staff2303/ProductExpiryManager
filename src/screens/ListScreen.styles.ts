@@ -100,13 +100,14 @@ export const styles = StyleSheet.create({
     paddingHorizontal: M.pillPadX,
     paddingVertical: M.pillPadY,
     borderRadius: sp(14),
-    backgroundColor: colors.secondarySoft,
+    backgroundColor: colors.secondary,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.secondary,
     minHeight: M.inputH,
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  scanBtnText: { color: colors.text, fontWeight: '900', fontSize: fs(16) },
+  scanBtnText: { color: colors.white, fontWeight: '900', fontSize: fs(16) },
 
   infoLine: {
     flexDirection: 'row',
@@ -129,9 +130,25 @@ export const styles = StyleSheet.create({
     minHeight: M.inputH,
     justifyContent: 'center',
   },
-  filterChipOn: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
+  filterChipOn: {
+    backgroundColor: colors.primarySoft,
+    borderColor: colors.primary,
+  },
   filterChipText: { color: colors.text, fontWeight: '800', fontSize: fs(15) },
   filterChipTextOn: { color: colors.primary },
+
+  // 날짜 아이콘 + (옵션) 날짜 문자열 묶음을 중앙 배치
+  filterChipInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: sp(8),
+  },
+  filterChipLabel: {
+    color: colors.text,
+    fontWeight: '900',
+    fontSize: fs(15),
+  },
 
   filterChipClose: {
     width: M.closeBtn,
@@ -164,15 +181,32 @@ export const styles = StyleSheet.create({
     padding: sp(12),
     borderRadius: sp(16),
     backgroundColor: colors.surface,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.border,
   },
 
+  // 카드 색 규칙: 지난/당일/하루전만 빨강, 나머지는 초록
+  cardRed: {
+    borderColor: colors.expiredBorder,
+    backgroundColor: colors.todayBg,
+  },
+  cardGreen: {
+    borderColor: colors.okBorder,
+    backgroundColor: colors.okBg,
+  },
+
+  // (legacy) 이전 다단계 색상은 잠시 유지 (다른 화면에서 참조 가능성)
   cardExpired: {
     borderColor: colors.expiredBorder,
     backgroundColor: colors.expiredBg,
   },
+  cardToday: {
+    borderColor: colors.todayBorder,
+    backgroundColor: colors.todayBg,
+  },
   cardSoon: { borderColor: colors.soonBorder, backgroundColor: colors.soonBg },
+  cardWarn: { borderColor: colors.warnBorder, backgroundColor: colors.warnBg },
+  cardOk: { borderColor: colors.okBorder, backgroundColor: colors.okBg },
 
   thumbWrap: {
     borderRadius: sp(14),
@@ -205,32 +239,19 @@ export const styles = StyleSheet.create({
     gap: sp(10),
   },
 
+  ddayRow: { flexDirection: 'row', alignItems: 'center', gap: sp(6) },
   ddayText: { color: colors.text, fontSize: fs(20), fontWeight: '900' },
-  ddayTextHot: { color: colors.danger },
-
-  chip: {
-    paddingHorizontal: sp(10),
-    paddingVertical: sp(7),
-    borderRadius: 999,
-    borderWidth: 1,
-  },
-  chipText: { color: colors.text, fontWeight: '900', fontSize: fs(12) },
-
-  chipExpired: { backgroundColor: colors.dangerSoft, borderColor: colors.expiredBorder },
-  chipToday: { backgroundColor: colors.warningSoft, borderColor: colors.soonBorder },
-  chipSoon: { backgroundColor: colors.warningSoft, borderColor: colors.soonBorder },
-  chipWarn: { backgroundColor: colors.surfaceAlt, borderColor: colors.borderStrong },
-  chipOk: { backgroundColor: colors.successSoft, borderColor: colors.success },
 
   name: { color: colors.text, fontSize: fs(20), fontWeight: '900' },
   barcode: { color: colors.textSubtle, fontSize: fs(13), fontWeight: '800' },
 
   metaCol: { gap: sp(2) },
-  metaText: { color: colors.textMuted, fontSize: fs(13), fontWeight: '800' },
+  // 유통기한/등록일: 제품명처럼 진한 검정
+  metaText: { color: colors.text, fontSize: fs(13), fontWeight: '800' },
 
   actionsCol: {
     alignSelf: 'stretch',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     gap: sp(8),
     paddingLeft: sp(4),
   },
@@ -241,21 +262,16 @@ export const styles = StyleSheet.create({
     borderRadius: M.iconRadius,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.surfaceAlt,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 1.5,
   },
-  iconBtnText: {
-    color: colors.text,
-    fontWeight: '900',
-    fontSize: is(20),
-    lineHeight: is(20),
+  iconBtnEdit: {
+    backgroundColor: colors.secondary,
+    borderColor: colors.secondary,
   },
-  iconBtnDanger: {
-    backgroundColor: colors.dangerSoft,
-    borderColor: colors.expiredBorder,
+  iconBtnDelete: {
+    backgroundColor: colors.surface,
+    borderColor: colors.borderStrong,
   },
-  iconBtnTextDanger: { color: colors.danger },
 
   emptyWrap: {
     marginTop: sp(24),
@@ -263,11 +279,11 @@ export const styles = StyleSheet.create({
     borderRadius: sp(16),
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderStrong,
     alignItems: 'center',
     gap: sp(10),
   },
-  emptyTitle: { color: colors.text, fontSize: fs(18), fontWeight: '900' },
+  emptyTitle: { color: colors.gsDeepBlue, fontSize: fs(18), fontWeight: '900' },
   emptyDesc: { color: colors.textMuted, fontSize: fs(14), fontWeight: '700' },
 
   emptyBtnRow: { flexDirection: 'row', gap: sp(10), marginTop: sp(6) },
@@ -279,8 +295,44 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     minHeight: M.inputH,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   primaryBtnText: { color: colors.white, fontWeight: '900', fontSize: fs(16) },
+
+  // Empty-state buttons (GS colors)
+  emptyPrimaryBtn: {
+    paddingHorizontal: M.pillPadX,
+    paddingVertical: 10,
+    borderRadius: sp(14),
+    backgroundColor: colors.primary,
+    borderWidth: 1,
+    borderColor: colors.primaryPressed,
+    minHeight: M.inputH,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyPrimaryText: {
+    color: colors.white,
+    fontWeight: '900',
+    fontSize: fs(16),
+  },
+
+  emptySecondaryBtn: {
+    paddingHorizontal: M.pillPadX,
+    paddingVertical: 10,
+    borderRadius: sp(14),
+    backgroundColor: colors.secondary,
+    borderWidth: 1,
+    borderColor: colors.secondary,
+    minHeight: M.inputH,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptySecondaryText: {
+    color: colors.white,
+    fontWeight: '900',
+    fontSize: fs(16),
+  },
 
   ghostBtn: {
     paddingHorizontal: M.pillPadX,
@@ -288,9 +340,10 @@ export const styles = StyleSheet.create({
     borderRadius: sp(14),
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.primary,
     minHeight: M.inputH,
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  ghostBtnText: { color: colors.text, fontWeight: '900', fontSize: fs(16) },
+  ghostBtnText: { color: colors.primary, fontWeight: '900', fontSize: fs(16) },
 });

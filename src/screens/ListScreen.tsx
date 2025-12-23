@@ -1,11 +1,5 @@
 // src/screens/ListScreen.tsx
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -17,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AppButton } from '../components/AppButton';
 import { SearchInput } from '../components/SearchInput';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -27,6 +22,7 @@ import {
 } from '../db/sqlite';
 import FullscreenImageModal from './FullscreenImageModal';
 import { styles, THUMB_W, MIN_H, MAX_H } from './ListScreen.styles';
+import { colors } from '../ui/tokens/colors';
 
 /** ---- 날짜/정렬 유틸 ---- */
 function parseYMD(s: string): Date | null {
@@ -70,6 +66,14 @@ function getDaysUntil(expiryYmd: string): number | null {
   if (!exp) return null;
   return diffDays(startOfToday(), exp);
 }
+
+// 지난거(<0) / 당일(0) / 하루전(1)만 빨강
+function isRedDate(expiryYmd: string): boolean {
+  const d = getDaysUntil(expiryYmd);
+  if (d === null) return false;
+  return d <= 1;
+}
+
 function urgencyOf(expiryYmd: string): Urgency {
   const d = getDaysUntil(expiryYmd);
   if (d === null) return 'unknown';
@@ -85,22 +89,6 @@ function ddayText(expiryYmd: string) {
   if (d < 0) return `만료 D+${Math.abs(d)}`;
   if (d === 0) return 'D-DAY';
   return `D-${d}`;
-}
-function urgencyLabel(u: Urgency) {
-  switch (u) {
-    case 'expired':
-      return '만료';
-    case 'today':
-      return '오늘';
-    case 'soon':
-      return '임박';
-    case 'warn':
-      return '주의';
-    case 'ok':
-      return '여유';
-    default:
-      return '확인';
-  }
 }
 /** ---- 룰 끝 ---- */
 
@@ -287,31 +275,17 @@ export default function ListScreen({
   const renderItem = ({ item }: { item: InventoryRow }) => {
     const u = urgencyOf(item.expiryDate);
     const dday = ddayText(item.expiryDate);
+    const redDate = isRedDate(item.expiryDate);
+    // D-Day 텍스트/아이콘: 지난/당일/하루전만 빨강, 나머지는 검정
+    const ddayColor = redDate ? colors.danger : colors.text;
 
     const keyUri = item.thumbUri?.trim()
       ? item.thumbUri
       : `inv:${item.inventoryId}`;
     const ratio = ratios[keyUri] ?? 1;
     const thumbH = clamp(THUMB_W / ratio, MIN_H, MAX_H);
-
-    const chipStyle =
-      u === 'expired'
-        ? styles.chipExpired
-        : u === 'today'
-        ? styles.chipToday
-        : u === 'soon'
-        ? styles.chipSoon
-        : u === 'warn'
-        ? styles.chipWarn
-        : styles.chipOk;
-
-    const cardStyle =
-      u === 'expired'
-        ? styles.cardExpired
-        : u === 'today' || u === 'soon'
-        ? styles.cardSoon
-        : undefined;
-
+    // 카드색 규칙: 지난/당일/하루전 = 빨강 카드, 나머지 = 초록 카드
+    const cardStyle = redDate ? styles.cardRed : styles.cardGreen;
     return (
       <View style={[styles.card, cardStyle]}>
         <TouchableOpacity
@@ -343,20 +317,10 @@ export default function ListScreen({
 
         <View style={styles.body}>
           <View style={styles.topRow}>
-            <Text
-              style={[
-                styles.ddayText,
-                (u === 'expired' || u === 'today') && styles.ddayTextHot,
-              ]}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {dday}
-            </Text>
-
-            <View style={[styles.chip, chipStyle]}>
-              <Text style={styles.chipText} numberOfLines={1}>
-                {urgencyLabel(u)}
+            <View style={styles.ddayRow}>
+              <Icon name="calendar-clock" size={18} color={ddayColor} />
+              <Text style={[styles.ddayText, { color: ddayColor }]} numberOfLines={1}>
+                {dday}
               </Text>
             </View>
           </View>
@@ -372,18 +336,10 @@ export default function ListScreen({
           )}
 
           <View style={styles.metaCol}>
-            <Text
-              style={styles.metaText}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
+            <Text style={styles.metaText} numberOfLines={1} ellipsizeMode="tail">
               유통기한 {item.expiryDate}
             </Text>
-            <Text
-              style={styles.metaText}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
+            <Text style={styles.metaText} numberOfLines={1} ellipsizeMode="tail">
               등록 {item.createdAt.slice(0, 10)}
             </Text>
           </View>
@@ -391,21 +347,21 @@ export default function ListScreen({
 
         <View style={styles.actionsCol}>
           <TouchableOpacity
-            style={styles.iconBtn}
+            style={[styles.iconBtn, styles.iconBtnEdit]}
             onPress={() => onEdit(item)}
             activeOpacity={0.85}
+            accessibilityLabel="수정"
           >
-            <Text style={styles.iconBtnText}>✎</Text>
+            <Icon name="pencil" size={20} color={colors.white} />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.iconBtn, styles.iconBtnDanger]}
+            style={[styles.iconBtn, styles.iconBtnDelete]}
             onPress={() => confirmDelete(item)}
             activeOpacity={0.85}
+            accessibilityLabel="삭제"
           >
-            <Text style={[styles.iconBtnText, styles.iconBtnTextDanger]}>
-              🗑
-            </Text>
+            <Icon name="trash-can-outline" size={20} color={colors.text} />
           </TouchableOpacity>
         </View>
       </View>
@@ -421,13 +377,14 @@ export default function ListScreen({
       return (
         <View style={styles.emptyWrap}>
           <Text style={styles.emptyTitle}>아직 등록된 제품이 없어요</Text>
-          <Text style={styles.emptyDesc}>
-            바코드를 스캔하거나 직접 추가해보세요.
-          </Text>
+          <Text style={styles.emptyDesc}>바코드를 스캔하거나 직접 추가해보세요.</Text>
 
           <View style={styles.emptyBtnRow}>
-            <TouchableOpacity style={styles.ghostBtn} onPress={onAddNew}>
-              <Text style={styles.ghostBtnText}>등록</Text>
+            <TouchableOpacity style={styles.emptySecondaryBtn} onPress={onScanBarcode}>
+              <Icon name="barcode-scan" size={20} color={colors.white} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.emptyPrimaryBtn} onPress={onAddNew}>
+              <Icon name="plus" size={22} color={colors.white} />
             </TouchableOpacity>
           </View>
         </View>
@@ -442,10 +399,10 @@ export default function ListScreen({
 
           <View style={styles.emptyBtnRow}>
             <TouchableOpacity style={styles.ghostBtn} onPress={clearQuery}>
-              <Text style={styles.ghostBtnText}>검색어 지우기</Text>
+              <Icon name="backspace-outline" size={20} color={colors.primary} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.ghostBtn} onPress={clearDateFilter}>
-              <Text style={styles.ghostBtnText}>날짜 필터 해제</Text>
+              <Icon name="calendar-remove-outline" size={20} color={colors.primary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -453,13 +410,7 @@ export default function ListScreen({
     }
 
     return null;
-  }, [
-    originalItems.length,
-    filteredItems.length,
-    dateFilter,
-    query,
-    onAddNew,
-  ]);
+  }, [originalItems.length, filteredItems.length, dateFilter, query, onAddNew, onScanBarcode]);
 
   // ✅ 고정 헤더(FlatList 밖으로 이동)
   const Header = (
@@ -471,17 +422,17 @@ export default function ListScreen({
 
         <View style={styles.headerBtnRow}>
           <AppButton
-            label="보관함"
+            accessibilityLabel="보관함"
             onPress={onOpenMaster}
             style={styles.dbBtn}
-            textStyle={styles.dbText}
+            icon={<Icon name="archive-outline" size={20} color={colors.text} />}
           />
 
           <AppButton
-            label="등록"
+            accessibilityLabel="등록"
             onPress={onAddNew}
             style={styles.addBtn}
-            textStyle={styles.addText}
+            icon={<Icon name="plus" size={22} color={colors.white} />}
           />
         </View>
       </View>
@@ -493,7 +444,7 @@ export default function ListScreen({
               value={draftQuery}
               onChangeText={setDraftQuery}
               placeholder="상품명 검색 (2글자 이상)"
-              placeholderTextColor="#777"
+              placeholderTextColor="#6B7280"
               inputStyle={styles.searchInput}
               returnKeyType="search"
               textAlignVertical="center"
@@ -505,8 +456,8 @@ export default function ListScreen({
             )}
           </View>
 
-          <TouchableOpacity style={styles.scanBtn} onPress={onScanBarcode}>
-            <Text style={styles.scanBtnText}>스캔</Text>
+          <TouchableOpacity style={styles.scanBtn} onPress={onScanBarcode} accessibilityLabel="스캔">
+            <Icon name="barcode-scan" size={20} color={colors.white} />
           </TouchableOpacity>
         </View>
 
@@ -522,17 +473,20 @@ export default function ListScreen({
             style={[styles.filterChip, displayDate && styles.filterChipOn]}
             onPress={() => setShowDatePicker(true)}
             activeOpacity={0.85}
+            accessibilityLabel="날짜 필터"
           >
-            <Text
-              style={[
-                styles.filterChipText,
-                displayDate && styles.filterChipTextOn,
-              ]}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {displayDate ? `유통기한 ${displayDate}` : '날짜 필터'}
-            </Text>
+            <View style={styles.filterChipInner}>
+              <Icon
+                name="calendar-month-outline"
+                size={20}
+                color={displayDate ? colors.primary : colors.text}
+              />
+              {!!displayDate && (
+                <Text style={styles.filterChipLabel} numberOfLines={1} ellipsizeMode="tail">
+                  {displayDate}
+                </Text>
+              )}
+            </View>
           </TouchableOpacity>
 
           {!!displayDate && (
@@ -540,6 +494,7 @@ export default function ListScreen({
               style={styles.filterChipClose}
               onPress={clearDateFilter}
               activeOpacity={0.85}
+              accessibilityLabel="날짜 필터 해제"
             >
               <Text style={styles.filterChipCloseText}>✕</Text>
             </TouchableOpacity>
@@ -578,10 +533,7 @@ export default function ListScreen({
         animationType="fade"
         onRequestClose={() => setViewerOpen(false)}
       >
-        <FullscreenImageModal
-          uri={viewerUri ?? ''}
-          onClose={() => setViewerOpen(false)}
-        />
+        <FullscreenImageModal uri={viewerUri ?? ''} onClose={() => setViewerOpen(false)} />
       </Modal>
     </SafeAreaView>
   );

@@ -4,6 +4,12 @@
 // Goal: 밝고 선명한 카드 UI + 쿨톤(블루/퍼플) 포인트.
 
 export const colors = {
+  // --- GS25 inspired brand accents (3-color system) ---
+  // used as base UI accents (buttons, focus states, highlights)
+  gsBlue: '#0B5FFF',
+  gsDeepBlue: '#0A4BD6',
+  gsMint: '#00C2C7',
+
   // --- Semantic tokens (preferred) ---
   bg: '#F6F7FB',
   surface: '#FFFFFF',
@@ -16,29 +22,36 @@ export const colors = {
   border: '#E5E7EB',
   borderStrong: '#CBD5E1',
 
-  // Accent (cool-tone)
-  primary: '#2f00daff',
-  primarySoft: '#EFEAFF',
-  primaryPressed: '#2f00daff',
+  // Accent (GS base)
+  primary: '#0B5FFF',
+  primarySoft: '#E8F1FF',
+  primaryPressed: '#0A4BD6',
 
-  secondary: '#00A3FF',
-  secondarySoft: '#E6F6FF',
+  secondary: '#00C2C7',
+  secondarySoft: '#E6FFFD',
 
   // Status
-  danger: '#E11D48',
-  dangerSoft: '#FFF1F2',
+  danger: '#E03131',
+  dangerSoft: '#FDE2E2',
 
-  warning: '#F97316',
-  warningSoft: '#FFF7ED',
+  warning: '#F08C00',
+  warningSoft: '#FFF4E6',
 
-  success: '#16A34A',
-  successSoft: '#ECFDF5',
+  success: '#0CA678',
+  successSoft: '#E6FCF5',
 
-  // Cards by urgency
-  expiredBg: '#FFF1F2',
-  expiredBorder: '#FDA4AF',
-  soonBg: '#FFF7ED',
-  soonBorder: '#FDBA74',
+  // Cards by urgency (textless = color-first)
+  // Expired: stronger red, Today(D-Day): lighter red
+  expiredBg: '#FDE2E2',
+  expiredBorder: '#E03131',
+  todayBg: '#FFE8E8',
+  todayBorder: '#FA5252',
+  soonBg: '#FFF4E6',
+  soonBorder: '#F08C00',
+  warnBg: '#E8F1FF',
+  warnBorder: '#0B5FFF',
+  okBg: '#E6FCF5',
+  okBorder: '#0CA678',
 
   // --- Legacy keys (kept for compatibility) ---
   black: '#000000',
