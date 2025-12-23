@@ -4,9 +4,9 @@ import { colors } from '../ui/tokens/colors';
 import { radius } from '../ui/tokens/radius';
 
 export const styles = StyleSheet.create({
-  title: { color: colors.white, fontSize: 18, fontWeight: '800', marginBottom: 10 },
+  title: { color: colors.text, fontSize: 18, fontWeight: '800', marginBottom: 10 },
 
-  photo: { borderRadius: radius.md, backgroundColor: colors.gray111, marginBottom: 12 },
+  photo: { borderRadius: radius.md, backgroundColor: colors.surfaceAlt, marginBottom: 12 },
 
   retakeBtn: {
     alignSelf: 'flex-start',
@@ -14,22 +14,22 @@ export const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: colors.gray333,
+    borderColor: colors.border,
     marginBottom: 14,
   },
-  retakeText: { color: colors.grayDDD, fontWeight: '700' },
+  retakeText: { color: colors.text, fontWeight: '700' },
 
-  label: { color: colors.white, marginBottom: 6, fontSize: 14, fontWeight: '600' },
+  label: { color: colors.text, marginBottom: 6, fontSize: 14, fontWeight: '600' },
 
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: colors.gray333,
+    borderColor: colors.border,
     borderRadius: radius.sm,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    color: colors.white,
-    backgroundColor: colors.gray111,
+    color: colors.text,
+    backgroundColor: colors.surface,
   },
   inputInvalid: { borderColor: colors.invalid },
 
@@ -38,7 +38,7 @@ export const styles = StyleSheet.create({
     width: 48,
     height: 44,
     borderRadius: radius.sm,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -52,16 +52,16 @@ export const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 999,
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: colors.primary,
   },
-  btnText: { fontSize: 16, fontWeight: '700' },
+  btnText: { fontSize: 16, fontWeight: '700', color: colors.white },
   btnGhost: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: colors.gray444,
+    borderColor: colors.borderStrong,
   },
-  btnGhostText: { color: colors.white },
+  btnGhostText: { color: colors.text },
   btnDisabled: { opacity: 0.4 },
 
-  hint: { color: colors.grayAAA, marginTop: 12, fontSize: 12 },
+  hint: { color: colors.textMuted, marginTop: 12, fontSize: 12 },
 });

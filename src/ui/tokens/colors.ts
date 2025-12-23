@@ -1,39 +1,71 @@
 // src/ui/tokens/colors.ts
+//
+// GS25-inspired (not a brand clone) light theme tokens.
+// Goal: 밝고 선명한 카드 UI + 쿨톤(블루/퍼플) 포인트.
 
 export const colors = {
-  black: '#000',
-  white: '#fff',
+  // --- Semantic tokens (preferred) ---
+  bg: '#F6F7FB',
+  surface: '#FFFFFF',
+  surfaceAlt: '#EEF2FF',
 
-  // Dark UI grays
-  gray0F: '#0f0f0f',
-  gray111: '#111',
-  gray15: '#151515',
-  gray17: '#171717',
-  gray1B: '#1b1b1b',
-  gray1D: '#1d1d1d',
-  gray22: '#222',
-  gray23: '#232323',
-  gray2B: '#2b2b2b',
-  gray333: '#333',
-  gray3A: '#3a3a3a',
-  gray444: '#444',
+  text: '#111827',
+  textMuted: '#6B7280',
+  textSubtle: '#9CA3AF',
 
-  // Text/placeholder
-  grayAAA: '#aaa',
-  grayBD: '#bdbdbd',
-  grayCF: '#cfcfcf',
-  grayD0: '#d0d0d0',
-  grayDDD: '#ddd',
-  gray666: '#666',
-  gray888: '#888',
+  border: '#E5E7EB',
+  borderStrong: '#CBD5E1',
+
+  // Accent (cool-tone)
+  primary: '#2f00daff',
+  primarySoft: '#EFEAFF',
+  primaryPressed: '#2f00daff',
+
+  secondary: '#00A3FF',
+  secondarySoft: '#E6F6FF',
 
   // Status
-  danger: '#ff6b6b',
-  invalid: '#a33',
+  danger: '#E11D48',
+  dangerSoft: '#FFF1F2',
 
-  // Card status backgrounds/borders
-  expiredBg: '#120a0a',
-  expiredBorder: '#3a1f1f',
-  soonBg: '#110d0a',
-  soonBorder: '#35241a',
+  warning: '#F97316',
+  warningSoft: '#FFF7ED',
+
+  success: '#16A34A',
+  successSoft: '#ECFDF5',
+
+  // Cards by urgency
+  expiredBg: '#FFF1F2',
+  expiredBorder: '#FDA4AF',
+  soonBg: '#FFF7ED',
+  soonBorder: '#FDBA74',
+
+  // --- Legacy keys (kept for compatibility) ---
+  black: '#000000',
+  white: '#FFFFFF',
+
+  // Grays (light palette)
+  gray0F: '#FFFFFF',
+  gray111: '#F6F7FB',
+  gray15: '#F3F4F6',
+  gray17: '#F9FAFB',
+  gray1B: '#EEF2FF',
+  gray1D: '#E5E7EB',
+  gray22: '#E5E7EB',
+  gray23: '#D1D5DB',
+  gray2B: '#CBD5E1',
+  gray333: '#9CA3AF',
+  gray3A: '#9CA3AF',
+  gray444: '#6B7280',
+
+  // Text/placeholder legacy
+  grayAAA: '#6B7280',
+  grayBD: '#4B5563',
+  grayCF: '#374151',
+  grayD0: '#374151',
+  grayDDD: '#111827',
+  gray666: '#6B7280',
+  gray888: '#6B7280',
+
+  invalid: '#B91C1C',
 } as const;

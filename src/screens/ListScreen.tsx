@@ -453,7 +453,13 @@ export default function ListScreen({
     }
 
     return null;
-  }, [originalItems.length, filteredItems.length, dateFilter, query, onAddNew]);
+  }, [
+    originalItems.length,
+    filteredItems.length,
+    dateFilter,
+    query,
+    onAddNew,
+  ]);
 
   // ✅ 고정 헤더(FlatList 밖으로 이동)
   const Header = (
