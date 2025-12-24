@@ -9,7 +9,6 @@ export const styles = StyleSheet.create({
 
   stickyHeader: {
     backgroundColor: colors.bg,
-    paddingTop: sp(6),
     paddingBottom: sp(10),
     borderBottomWidth: 1,
     borderBottomColor: colors.border,

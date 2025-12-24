@@ -1,4 +1,4 @@
-// src/screens/MasterListScreen.tsx
+import Screen from '../components/Screen';
 import React, {
   useCallback,
   useEffect,
@@ -11,7 +11,6 @@ import {
   FlatList,
   Image,
   Modal,
-  SafeAreaView,
   Text,
   ToastAndroid,
   TouchableOpacity,
@@ -19,7 +18,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { ScreenHeader } from '../components/ScreenHeader';
+import AppHeader from '../components/AppHeader';
 import { SearchInput } from '../components/SearchInput';
 import { colors } from '../ui/tokens/colors';
 
@@ -208,6 +207,14 @@ export default function MasterListScreen({
           <Text style={styles.emptyDesc}>
             바코드를 스캔해서 상품을 먼저 등록해보세요.
           </Text>
+          <View style={styles.scanIconBtn}>
+            <TouchableOpacity
+              style={styles.iconBtnEdit}
+              onPress={onScanBarcode}
+            >
+              <Icon name="barcode-scan" size={20} color={colors.white} />
+            </TouchableOpacity>
+          </View>
         </View>
       );
     }
@@ -227,7 +234,11 @@ export default function MasterListScreen({
               activeOpacity={0.85}
               accessibilityLabel="검색어 삭제"
             >
-              <Icon name="backspace-outline" size={20} color={colors.textMuted} />
+              <Icon
+                name="backspace-outline"
+                size={20}
+                color={colors.textMuted}
+              />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.scanIconBtn}
@@ -247,7 +258,7 @@ export default function MasterListScreen({
 
   const Header = (
     <View style={styles.stickyHeader}>
-      <ScreenHeader title="보관함" onBack={onBack} sideWidth={72} />
+      <AppHeader title="보관함" onBack={onBack} />
 
       <View style={styles.controls}>
         <View style={styles.searchLine}>
@@ -297,7 +308,7 @@ export default function MasterListScreen({
   );
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <Screen padding={0} scroll={false}>
       {Header}
 
       <FlatList
@@ -321,6 +332,6 @@ export default function MasterListScreen({
           onClose={() => setViewerOpen(false)}
         />
       </Modal>
-    </SafeAreaView>
+    </Screen>
   );
 }

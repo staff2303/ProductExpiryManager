@@ -14,10 +14,6 @@ export const styles = StyleSheet.create({
 
   stickyHeader: {
     backgroundColor: colors.bg,
-
-    // ✅ 헤더 아래 영역이 너무 붙어 보이지 않게(헤더와 컨트롤 사이 숨통)
-    paddingTop: sp(6),
-
     paddingBottom: sp(10),
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
@@ -87,7 +83,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     color: colors.text,
     paddingVertical: M.inputPadY,
-    fontSize: fs(16),
+    fontSize: fs(17),
   },
 
   searchClear: {
@@ -102,13 +98,12 @@ export const styles = StyleSheet.create({
   },
 
   scanBtn: {
-    paddingHorizontal: M.pillPadX,
-    paddingVertical: M.pillPadY,
-    borderRadius: sp(14),
+    width: M.iconBtn,
+    height: M.iconBtn,
+    borderRadius: M.iconRadius,
     backgroundColor: colors.secondary,
-    minHeight: M.inputH,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
 
   emptyIconBtn: {
@@ -299,7 +294,7 @@ export const styles = StyleSheet.create({
     borderRadius: sp(16),
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.borderStrong,
+    borderColor: colors.border,
     alignItems: 'center',
     gap: sp(10),
   },
@@ -342,7 +337,6 @@ export const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: sp(14),
     backgroundColor: colors.secondary,
-    borderWidth: 1,
     borderColor: colors.secondary,
     minHeight: M.inputH,
     justifyContent: 'center',

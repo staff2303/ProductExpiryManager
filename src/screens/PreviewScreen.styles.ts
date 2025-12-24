@@ -3,15 +3,17 @@ import { StyleSheet } from 'react-native';
 import { colors } from '../ui/tokens/colors';
 
 export const styles = StyleSheet.create({
-  safe: {flex: 1, backgroundColor: colors.black},
-  container: {flex: 1},
-  image: {flex: 1},
+  safe: { flex: 1, backgroundColor: colors.black },
+  container: { flex: 1 },
+  image: { flex: 1 },
   bottomBar: {
     position: 'absolute',
-    left: 0, right: 0, bottom: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     padding: 20,
   },
-  row: {flexDirection: 'row', gap: 12},
+  row: { flexDirection: 'row', gap: 12 },
   btn: {
     flex: 1,
     paddingVertical: 14,
@@ -19,7 +21,11 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.white,
   },
-  btnText: {fontSize: 16, fontWeight: '700'},
-  ghost: {backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.gray444},
-  ghostText: {color: colors.white},
+  btnText: { fontSize: 16, fontWeight: '700' },
+  ghost: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.gray444,
+  },
+  ghostText: { color: colors.white },
 });

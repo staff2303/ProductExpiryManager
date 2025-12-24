@@ -30,7 +30,9 @@ export default function Screen({
   if (!scroll) {
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={[styles.noScroll, { padding }, contentStyle]}>{children}</View>
+        <View style={[styles.noScroll, { padding }, contentStyle]}>
+          {children}
+        </View>
       </SafeAreaView>
     );
   }

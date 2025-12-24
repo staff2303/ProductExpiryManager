@@ -1,18 +1,31 @@
+import Screen from '../components/Screen';
 import React from 'react';
-import { Image, SafeAreaView, View } from 'react-native';
+import {
+Image, View
+} from 'react-native';
+import AppHeader from '../components/AppHeader';
 import { AppButton } from '../components/AppButton';
 import { styles } from './PreviewScreen.styles';
 type Props = {
   uri: string;
   onRetake: () => void;
   onUse?: () => void;
+  onBack?: () => void;
+  title?: string;
 };
 
-export default function PreviewScreen({uri, onRetake, onUse}: Props) {
+export default function PreviewScreen({
+  uri,
+  onRetake,
+  onUse,
+  onBack,
+  title = '미리보기',
+}: Props) {
   return (
-    <SafeAreaView style={styles.safe}>
+    <Screen padding={0} scroll={false}>
+      <AppHeader title={title} onBack={onBack ?? onRetake} />
       <View style={styles.container}>
-        <Image source={{uri}} style={styles.image} resizeMode="contain" />
+        <Image source={{ uri }} style={styles.image} resizeMode="contain" />
         <View style={styles.bottomBar}>
           <View style={styles.row}>
             <AppButton
@@ -32,7 +45,6 @@ export default function PreviewScreen({uri, onRetake, onUse}: Props) {
           </View>
         </View>
       </View>
-    </SafeAreaView>
+    </Screen>
   );
 }
-

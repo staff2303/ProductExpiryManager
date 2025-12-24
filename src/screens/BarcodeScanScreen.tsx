@@ -1,11 +1,15 @@
+import Screen from '../components/Screen';
 // src/screens/BarcodeScanScreen.tsx
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { SafeAreaView, Text, View, useWindowDimensions } from 'react-native';
+import {
+Text, View, useWindowDimensions
+} from 'react-native';
 import {
   Camera,
   useCameraDevice,
   useCodeScanner,
 } from 'react-native-vision-camera';
+import AppHeader from '../components/AppHeader';
 import { AppButton } from '../components/AppButton';
 import { styles } from './BarcodeScanScreen.styles';
 
@@ -104,10 +108,7 @@ export default function BarcodeScanScreen({ onBack, onScanned }: Props) {
     const cx = frame.x + frame.width / 2;
     const cy = frame.y + frame.height / 2;
     return (
-      cx >= roi.x &&
-      cx <= roi.x + roi.w &&
-      cy >= roi.y &&
-      cy <= roi.y + roi.h
+      cx >= roi.x && cx <= roi.x + roi.w && cy >= roi.y && cy <= roi.y + roi.h
     );
   };
 
@@ -127,8 +128,10 @@ export default function BarcodeScanScreen({ onBack, onScanned }: Props) {
     },
   });
 
-  if (!device) return <Text style={styles.center}>카메라 장치를 찾는 중...</Text>;
-  if (!hasPermission) return <Text style={styles.center}>카메라 권한이 필요합니다.</Text>;
+  if (!device)
+    return <Text style={styles.center}>카메라 장치를 찾는 중...</Text>;
+  if (!hasPermission)
+    return <Text style={styles.center}>카메라 권한이 필요합니다.</Text>;
 
   // L자 코너 길이/두께(ROI 크기에 비례)
   const CORNER_LEN = Math.max(18, Math.floor(roi.w * 0.08)); // 가로의 8% (최소 18)
@@ -138,7 +141,7 @@ export default function BarcodeScanScreen({ onBack, onScanned }: Props) {
   const redLineTop = roi.y + roi.h / 2 - 1; // 2px 라인 기준
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <Screen padding={0} scroll={false}>
       <View style={styles.container}>
         <Camera
           style={styles.camera}
@@ -148,6 +151,12 @@ export default function BarcodeScanScreen({ onBack, onScanned }: Props) {
         />
 
         <View style={styles.overlay} pointerEvents="box-none">
+          <AppHeader
+            title="바코드 스캔"
+            onBack={onBack}
+            variant="transparent"
+            containerStyle={{ position: 'absolute', left: 0, right: 0, top: 0 }}
+          />
           <Text style={styles.title}>바코드를 중앙에 맞춰주세요</Text>
 
           {/* 마스킹(프레임 바깥 어둡게) */}
@@ -280,15 +289,8 @@ export default function BarcodeScanScreen({ onBack, onScanned }: Props) {
               ]}
             />
           </View>
-
-          <AppButton
-            label="← 뒤로"
-            onPress={onBack}
-            style={styles.backBtn}
-            textStyle={styles.back}
-          />
         </View>
       </View>
-    </SafeAreaView>
+    </Screen>
   );
 }

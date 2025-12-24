@@ -4,8 +4,18 @@ import { colors } from '../ui/tokens/colors';
 import { radius } from '../ui/tokens/radius';
 
 export const styles = StyleSheet.create({
-  title: { color: colors.text, fontSize: 18, fontWeight: '900', marginBottom: 6 },
+  title: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: '900',
+    marginBottom: 6,
+  },
   sub: { color: colors.textMuted, marginBottom: 10 },
+
+  body:{
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
 
   image: {
     width: '100%',
@@ -26,7 +36,12 @@ export const styles = StyleSheet.create({
   },
   retakeText: { color: colors.text, fontWeight: '800' },
 
-  label: { color: colors.text, marginBottom: 6, fontSize: 14, fontWeight: '700' },
+  label: {
+    color: colors.text,
+    marginBottom: 6,
+    fontSize: 14,
+    fontWeight: '700',
+  },
   input: {
     borderWidth: 1,
     borderColor: colors.border,

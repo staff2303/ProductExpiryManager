@@ -11,39 +11,6 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
 
-  /* 헤더 */
-  headerRow: {
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.bg,
-  },
-  backBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  backText: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: '900',
-  },
-  headerTitle: {
-    color: colors.text,
-    fontSize: 20,
-    fontWeight: '900',
-  },
-
   subText: {
     paddingHorizontal: 16,
     paddingTop: 10,

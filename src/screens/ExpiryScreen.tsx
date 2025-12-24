@@ -1,18 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import {
-  Dimensions,
-  Image,
-  Platform,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Image, Platform, Text, TextInput, View } from 'react-native';
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import Screen from '../components/Screen';
+import AppHeader from '../components/AppHeader';
 import { AppButton } from '../components/AppButton';
 import { styles } from './ExpiryScreen.styles';
 import { colors } from '../ui/tokens/colors';
@@ -72,27 +66,11 @@ export default function ExpiryScreen({
 
   return (
     <Screen padding={0}>
-      {/* ===== Header ===== */}
-      <View style={styles.headerRow}>
-        <View style={styles.headerSide}>
-          <AppButton
-            icon={<Icon name="arrow-left" size={20} color={colors.text} />}
-            onPress={onBack}
-            style={styles.iconBtn}
-            accessibilityLabel="뒤로가기"
-          />
-        </View>
-
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>
-            {mode === 'edit' ? '유통기한 수정' : '유통기한 등록'}
-          </Text>
-        </View>
-
-        <View style={styles.headerSide}>
-          {/* 오른쪽 자리(필요 시 버튼 넣기) */}
-        </View>
-      </View>
+      {/* ✅ 공용 헤더로 통합 */}
+      <AppHeader
+        title={mode === 'edit' ? '유통기한 수정' : '유통기한 등록'}
+        onBack={onBack}
+      />
 
       <View style={styles.body}>
         {/* ===== 이미지 카드 ===== */}

@@ -51,11 +51,7 @@ export function AppButton({
           justifyContent: 'center',
         }}
       >
-        {!!icon && (
-          <View style={{ marginRight: label ? 8 : 0 }}>
-            {icon}
-          </View>
-        )}
+        {!!icon && <View style={{ marginRight: label ? 8 : 0 }}>{icon}</View>}
         {!!label && <Text style={textStyle}>{label}</Text>}
       </View>
     </Pressable>

@@ -92,7 +92,9 @@ export function ScreenHeader({
       </View>
 
       {/* RIGHT */}
-      <View style={[styles.sideRight, { width: sideW }, rightStyle]}>{right}</View>
+      <View style={[styles.sideRight, { width: sideW }, rightStyle]}>
+        {right}
+      </View>
     </View>
   );
 }

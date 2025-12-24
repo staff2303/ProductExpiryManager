@@ -1,0 +1,171 @@
+diff --git a/src/screens/BarcodeScanScreen.tsx b/src/screens/BarcodeScanScreen.tsx
+index 07e7bbf..4cf1ab5 100644
+--- a/src/screens/BarcodeScanScreen.tsx
++++ b/src/screens/BarcodeScanScreen.tsx
+@@ -1,12 +1,13 @@
+ // src/screens/BarcodeScanScreen.tsx
+ import React, { useEffect, useMemo, useRef, useState } from 'react';
+-import { SafeAreaView, Text, View, useWindowDimensions } from 'react-native';
++import { Text, View, useWindowDimensions } from 'react-native';
+ import {
+   Camera,
+   useCameraDevice,
+   useCodeScanner,
+ } from 'react-native-vision-camera';
+ import AppHeader from '../components/AppHeader';
++import Screen from '../components/Screen';
+ import { AppButton } from '../components/AppButton';
+ import { styles } from './BarcodeScanScreen.styles';
+ 
+@@ -138,7 +139,7 @@ export default function BarcodeScanScreen({ onBack, onScanned }: Props) {
+   const redLineTop = roi.y + roi.h / 2 - 1; // 2px 라인 기준
+ 
+   return (
+-    <SafeAreaView style={styles.safe}>
++    <Screen padding={0} scroll={false}>
+       <View style={styles.container}>
+         <Camera
+           style={styles.camera}
+@@ -288,6 +289,6 @@ export default function BarcodeScanScreen({ onBack, onScanned }: Props) {
+           </View>
+         </View>
+       </View>
+-    </SafeAreaView>
++    </Screen>
+   );
+ }
+diff --git a/src/screens/CameraScreen.tsx b/src/screens/CameraScreen.tsx
+index bac3727..c9c6cf4 100644
+--- a/src/screens/CameraScreen.tsx
++++ b/src/screens/CameraScreen.tsx
+@@ -1,7 +1,8 @@
+ import React, { useEffect, useRef, useState } from 'react';
+-import { SafeAreaView, Text, View } from 'react-native';
++import { Text, View } from 'react-native';
+ import { Camera, useCameraDevice } from 'react-native-vision-camera';
+ import AppHeader from '../components/AppHeader';
++import Screen from '../components/Screen';
+ import { AppButton } from '../components/AppButton';
+ import { styles } from './CameraScreen.styles';
+ type Props = {
+@@ -39,7 +40,7 @@ export default function CameraScreen({
+     return <Text style={styles.center}>카메라 권한이 필요합니다.</Text>;
+ 
+   return (
+-    <SafeAreaView style={styles.safe}>
++    <Screen padding={0} scroll={false}>
+       <AppHeader title={title} onBack={onBack} variant="transparent" />
+       <View style={styles.container}>
+         <Camera
+@@ -58,6 +59,6 @@ export default function CameraScreen({
+           />
+         </View>
+       </View>
+-    </SafeAreaView>
++    </Screen>
+   );
+ }
+diff --git a/src/screens/ListScreen.tsx b/src/screens/ListScreen.tsx
+index e76c5e4..18c20c9 100644
+--- a/src/screens/ListScreen.tsx
++++ b/src/screens/ListScreen.tsx
+@@ -11,13 +11,14 @@ import {
+   FlatList,
+   Image,
+   Modal,
+-  SafeAreaView,
+   Text,
+   ToastAndroid,
+   TouchableOpacity,
+   View,
+ } from 'react-native';
+ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
++
++import Screen from '../components/Screen';
+ import { AppButton } from '../components/AppButton';
+ import { SearchInput } from '../components/SearchInput';
+ import AppHeader from '../components/AppHeader';
+@@ -569,7 +570,7 @@ export default function ListScreen({
+   );
+ 
+   return (
+-    <SafeAreaView style={styles.safe}>
++    <Screen padding={0} scroll={false}>
+       {Header}
+ 
+       <FlatList
+@@ -602,6 +603,6 @@ export default function ListScreen({
+           onClose={() => setViewerOpen(false)}
+         />
+       </Modal>
+-    </SafeAreaView>
++    </Screen>
+   );
+ }
+diff --git a/src/screens/MasterListScreen.tsx b/src/screens/MasterListScreen.tsx
+index 8062c6d..ebd5135 100644
+--- a/src/screens/MasterListScreen.tsx
++++ b/src/screens/MasterListScreen.tsx
+@@ -11,7 +11,6 @@ import {
+   FlatList,
+   Image,
+   Modal,
+-  SafeAreaView,
+   Text,
+   ToastAndroid,
+   TouchableOpacity,
+@@ -20,6 +19,7 @@ import {
+ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+ 
+ import AppHeader from '../components/AppHeader';
++import Screen from '../components/Screen';
+ import { SearchInput } from '../components/SearchInput';
+ import { colors } from '../ui/tokens/colors';
+ 
+@@ -301,7 +301,7 @@ export default function MasterListScreen({
+   );
+ 
+   return (
+-    <SafeAreaView style={styles.safe}>
++    <Screen padding={0} scroll={false}>
+       {Header}
+ 
+       <FlatList
+@@ -325,6 +325,6 @@ export default function MasterListScreen({
+           onClose={() => setViewerOpen(false)}
+         />
+       </Modal>
+-    </SafeAreaView>
++    </Screen>
+   );
+ }
+diff --git a/src/screens/PreviewScreen.tsx b/src/screens/PreviewScreen.tsx
+index da2cafb..fac86bb 100644
+--- a/src/screens/PreviewScreen.tsx
++++ b/src/screens/PreviewScreen.tsx
+@@ -1,6 +1,7 @@
+ import React from 'react';
+-import { Image, SafeAreaView, View } from 'react-native';
++import { Image, View } from 'react-native';
+ import AppHeader from '../components/AppHeader';
++import Screen from '../components/Screen';
+ import { AppButton } from '../components/AppButton';
+ import { styles } from './PreviewScreen.styles';
+ type Props = {
+@@ -19,7 +20,7 @@ export default function PreviewScreen({
+   title = '미리보기',
+ }: Props) {
+   return (
+-    <SafeAreaView style={styles.safe}>
++    <Screen padding={0} scroll={false}>
+       <AppHeader title={title} onBack={onBack ?? onRetake} />
+       <View style={styles.container}>
+         <Image source={{ uri }} style={styles.image} resizeMode="contain" />
+@@ -42,6 +43,6 @@ export default function PreviewScreen({
+           </View>
+         </View>
+       </View>
+-    </SafeAreaView>
++    </Screen>
+   );
+ }

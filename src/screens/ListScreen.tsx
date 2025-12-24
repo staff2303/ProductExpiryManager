@@ -1,4 +1,4 @@
-// src/screens/ListScreen.tsx
+import Screen from '../components/Screen';
 import React, {
   useCallback,
   useEffect,
@@ -11,7 +11,6 @@ import {
   FlatList,
   Image,
   Modal,
-  SafeAreaView,
   Text,
   ToastAndroid,
   TouchableOpacity,
@@ -20,7 +19,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AppButton } from '../components/AppButton';
 import { SearchInput } from '../components/SearchInput';
-import { ScreenHeader } from '../components/ScreenHeader';
+import AppHeader from '../components/AppHeader';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {
   InventoryRow,
@@ -463,9 +462,8 @@ export default function ListScreen({
   // ✅ 고정 헤더(FlatList 밖으로 이동)
   const Header = (
     <View style={styles.stickyHeader}>
-      <ScreenHeader
+      <AppHeader
         title="유통기한 관리"
-        sideWidth={72}
         left={
           <AppButton
             accessibilityLabel="보관함"
@@ -516,6 +514,7 @@ export default function ListScreen({
           <TouchableOpacity
             style={styles.scanBtn}
             onPress={onScanBarcode}
+            activeOpacity={0.85}
             accessibilityLabel="스캔"
           >
             <Icon name="barcode-scan" size={20} color={colors.white} />
@@ -570,7 +569,7 @@ export default function ListScreen({
   );
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <Screen padding={0} scroll={false}>
       {Header}
 
       <FlatList
@@ -603,6 +602,6 @@ export default function ListScreen({
           onClose={() => setViewerOpen(false)}
         />
       </Modal>
-    </SafeAreaView>
+    </Screen>
   );
 }

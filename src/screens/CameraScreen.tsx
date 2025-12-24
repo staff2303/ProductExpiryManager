@@ -1,13 +1,23 @@
+import Screen from '../components/Screen';
 import React, { useEffect, useRef, useState } from 'react';
-import { SafeAreaView, Text, View } from 'react-native';
+import {
+Text, View
+} from 'react-native';
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
+import AppHeader from '../components/AppHeader';
 import { AppButton } from '../components/AppButton';
 import { styles } from './CameraScreen.styles';
 type Props = {
   onCaptured: (uri: string) => void;
+  onBack?: () => void;
+  title?: string;
 };
 
-export default function CameraScreen({ onCaptured }: Props) {
+export default function CameraScreen({
+  onCaptured,
+  onBack,
+  title = '카메라',
+}: Props) {
   const device = useCameraDevice('back');
   const cameraRef = useRef<Camera>(null);
   const [hasPermission, setHasPermission] = useState(false);
@@ -32,7 +42,8 @@ export default function CameraScreen({ onCaptured }: Props) {
     return <Text style={styles.center}>카메라 권한이 필요합니다.</Text>;
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <Screen padding={0} scroll={false}>
+      <AppHeader title={title} onBack={onBack} variant="transparent" />
       <View style={styles.container}>
         <Camera
           ref={cameraRef}
@@ -50,7 +61,6 @@ export default function CameraScreen({ onCaptured }: Props) {
           />
         </View>
       </View>
-    </SafeAreaView>
+    </Screen>
   );
 }
-

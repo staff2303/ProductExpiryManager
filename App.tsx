@@ -271,6 +271,7 @@ export default function App() {
         if (step === STEPS.MASTER_EDIT_CAMERA && editingMaster) {
           return (
             <CameraScreen
+              onBack={() => setStep(STEPS.MASTER_EDIT)}
               onCaptured={u => {
                 setMasterEditUri(u);
                 setStep(STEPS.MASTER_EDIT_PREVIEW);
@@ -283,6 +284,7 @@ export default function App() {
           return (
             <PreviewScreen
               uri={masterEditUri}
+              onBack={() => setStep(STEPS.MASTER_EDIT)}
               onRetake={() => {
                 setMasterEditUri(null);
                 setStep(STEPS.MASTER_EDIT_CAMERA);
@@ -440,6 +442,7 @@ export default function App() {
         if (step === STEPS.EDIT_CAMERA && editing) {
           return (
             <CameraScreen
+              onBack={() => setStep(STEPS.EDIT)}
               onCaptured={u => {
                 setEditUri(u);
                 setStep(STEPS.EDIT_PREVIEW);
@@ -452,6 +455,7 @@ export default function App() {
           return (
             <PreviewScreen
               uri={editUri}
+              onBack={() => setStep(STEPS.EDIT)}
               onRetake={() => {
                 setEditUri(null);
                 setStep(STEPS.EDIT_CAMERA);
