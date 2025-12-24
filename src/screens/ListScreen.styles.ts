@@ -14,6 +14,10 @@ export const styles = StyleSheet.create({
 
   stickyHeader: {
     backgroundColor: colors.bg,
+
+    // ✅ 헤더 아래 영역이 너무 붙어 보이지 않게(헤더와 컨트롤 사이 숨통)
+    paddingTop: sp(6),
+
     paddingBottom: sp(10),
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
@@ -58,7 +62,12 @@ export const styles = StyleSheet.create({
   },
   dbText: { color: colors.text, fontWeight: '900', fontSize: fs(14) },
 
-  controls: { paddingHorizontal: sp(16), gap: sp(8) },
+  // ✅ 헤더와 검색창 사이 간격
+  controls: {
+    marginTop: sp(10),
+    paddingHorizontal: sp(16),
+    gap: sp(8),
+  },
 
   searchLine: { flexDirection: 'row', gap: sp(10), alignItems: 'center' },
 

@@ -14,6 +14,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AppButton } from '../components/AppButton';
 import { SearchInput } from '../components/SearchInput';
+import { ScreenHeader } from '../components/ScreenHeader';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {
   InventoryRow,
@@ -415,27 +416,28 @@ export default function ListScreen({
   // ✅ 고정 헤더(FlatList 밖으로 이동)
   const Header = (
     <View style={styles.stickyHeader}>
-      <View style={styles.headerRow}>
-        <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
-          유통기한 관리
-        </Text>
-
-        <View style={styles.headerBtnRow}>
+      <ScreenHeader
+        title="유통기한 관리"
+        sideWidth={72}
+        left={
           <AppButton
             accessibilityLabel="보관함"
             onPress={onOpenMaster}
             style={styles.dbBtn}
-            icon={<Icon name="archive-outline" size={20} color={colors.text} />}
+            textStyle={styles.dbText}
+            icon={<Icon name="archive-outline" size={18} color={colors.text} />}
           />
-
+        }
+        right={
           <AppButton
-            accessibilityLabel="등록"
+            accessibilityLabel="추가"
             onPress={onAddNew}
             style={styles.addBtn}
-            icon={<Icon name="plus" size={22} color={colors.white} />}
+            textStyle={styles.addText}
+            icon={<Icon name="plus" size={18} color={colors.white} />}
           />
-        </View>
-      </View>
+        }
+      />
 
       <View style={styles.controls}>
         <View style={styles.searchLine}>
