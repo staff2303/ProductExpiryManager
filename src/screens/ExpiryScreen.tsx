@@ -1,15 +1,26 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Dimensions, Image, Platform, Text, TextInput, View } from 'react-native';
+import {
+  Dimensions,
+  Image,
+  Platform,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
 import Screen from '../components/Screen';
 import { AppButton } from '../components/AppButton';
 import { styles } from './ExpiryScreen.styles';
+import { colors } from '../ui/tokens/colors';
+
 type Props = {
   uri: string;
   mode?: 'create' | 'edit';
-  initialExpiryDate?: string; // YYYY-MM-DD
+  initialExpiryDate?: string;
   onBack: () => void;
   onNext: (data: { expiryDate: string }) => void;
   onRetakePhoto?: () => void;
@@ -37,13 +48,6 @@ function parseYMD(s: string): Date | null {
   dt.setHours(0, 0, 0, 0);
   return dt;
 }
-function isPast(d: Date) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  return x < today;
-}
 /* ---------- 날짜 유틸 끝 ---------- */
 
 export default function ExpiryScreen({
@@ -57,29 +61,7 @@ export default function ExpiryScreen({
   const [expiryText, setExpiryText] = useState(initialExpiryDate);
   const [showPicker, setShowPicker] = useState(false);
 
-  /* ---------- 이미지 실제 비율 계산 ---------- */
-  const [imgSize, setImgSize] = useState<{
-    width: number;
-    height: number;
-  } | null>(null);
-
-  useEffect(() => {
-    const screenWidth = Dimensions.get('window').width - 32; // padding 16*2
-    Image.getSize(
-      uri,
-      (w, h) => {
-        const ratio = h / w;
-        setImgSize({ width: screenWidth, height: screenWidth * ratio });
-      },
-      () => {
-        setImgSize({ width: screenWidth, height: screenWidth * 0.75 }); // fallback
-      },
-    );
-  }, [uri]);
-  /* ---------- 이미지 계산 끝 ---------- */
-
   const parsedDate = useMemo(() => parseYMD(expiryText), [expiryText]);
-  const isPastDate = parsedDate ? isPast(parsedDate) : false;
   const canSave = !!parsedDate;
 
   const onPickerChange = (event: DateTimePickerEvent, selected?: Date) => {
@@ -89,88 +71,101 @@ export default function ExpiryScreen({
   };
 
   return (
-    <Screen contentStyle={{ paddingBottom: 40 }}>
-      <Text style={styles.title}>
-        {mode === 'edit' ? '유통기한 수정' : '유통기한 등록'}
-      </Text>
+    <Screen padding={0}>
+      {/* ===== Header ===== */}
+      <View style={styles.headerRow}>
+        <View style={styles.headerSide}>
+          <AppButton
+            icon={<Icon name="arrow-left" size={20} color={colors.text} />}
+            onPress={onBack}
+            style={styles.iconBtn}
+            accessibilityLabel="뒤로가기"
+          />
+        </View>
 
-      {imgSize && (
-        <Image
-          source={{ uri }}
-          style={[styles.photo, imgSize]}
-          resizeMode="contain"
-        />
-      )}
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>
+            {mode === 'edit' ? '유통기한 수정' : '유통기한 등록'}
+          </Text>
+        </View>
 
-      {mode === 'edit' && onRetakePhoto && (
-        <AppButton
-          label="사진 다시 찍기"
-          onPress={onRetakePhoto}
-          style={styles.retakeBtn}
-          textStyle={styles.retakeText}
-        />
-      )}
-
-      <Text style={styles.label}>유통기한</Text>
-
-      <View style={styles.dateRow}>
-        <TextInput
-          value={expiryText}
-          onChangeText={v => setExpiryText(autoFormatYMD(v))}
-          placeholder="YYYY-MM-DD 또는 20260115"
-          style={[
-            styles.input,
-            !parsedDate && expiryText.length > 0 ? styles.inputInvalid : null,
-          ]}
-          keyboardType="number-pad"
-          maxLength={10}
-          placeholderTextColor="#888"
-        />
-        <AppButton
-          label="📅"
-          onPress={() => setShowPicker(true)}
-          style={styles.calendarBtn}
-          textStyle={styles.calendarBtnText}
-          accessibilityLabel="달력 열기"
-        />
+        <View style={styles.headerSide}>
+          {/* 오른쪽 자리(필요 시 버튼 넣기) */}
+        </View>
       </View>
 
-      {showPicker && (
-        <DateTimePicker
-          value={parsedDate ?? new Date()}
-          mode="date"
-          display="calendar"
-          onChange={onPickerChange}
-        />
-      )}
+      <View style={styles.body}>
+        {/* ===== 이미지 카드 ===== */}
+        <View style={styles.card}>
+          <View style={styles.previewImageWrap}>
+            <Image
+              source={{ uri }}
+              style={styles.previewImage}
+              resizeMode="contain"
+            />
 
-      {isPastDate && (
-        <Text style={styles.warn}>
-          ⚠ 이미 지난 날짜입니다. 그래도 저장은 가능합니다.
-        </Text>
-      )}
+            {/* ✅ 다시 찍기 버튼: 이미지 안 가운데 하단 */}
+            {mode === 'edit' && onRetakePhoto && (
+              <View pointerEvents="box-none" style={styles.overlayBottomCenter}>
+                <AppButton
+                  label="다시 찍기"
+                  onPress={onRetakePhoto}
+                  style={styles.retakeOverlayBtn}
+                  textStyle={styles.retakeOverlayText}
+                />
+              </View>
+            )}
+          </View>
+        </View>
 
-      <View style={styles.row}>
-        <AppButton
-          label="뒤로"
-          onPress={onBack}
-          style={[styles.btn, styles.btnGhost]}
-          textStyle={[styles.btnText, styles.btnGhostText]}
-        />
+        {/* ===== 유통기한 입력 ===== */}
+        <Text style={styles.label}>유통기한</Text>
 
-        <AppButton
-          label={mode === 'edit' ? '수정 저장' : '저장'}
-          onPress={() => onNext({ expiryDate: expiryText })}
-          disabled={!canSave}
-          style={[styles.btn, !canSave && styles.btnDisabled]}
-          textStyle={styles.btnText}
-        />
+        <View style={styles.dateRow}>
+          <TextInput
+            value={expiryText}
+            onChangeText={v => setExpiryText(autoFormatYMD(v))}
+            placeholder="YYYY-MM-DD"
+            style={[
+              styles.input,
+              !parsedDate && expiryText.length > 0 ? styles.inputInvalid : null,
+            ]}
+            keyboardType="number-pad"
+            maxLength={10}
+            placeholderTextColor={colors.textSubtle}
+          />
+
+          <AppButton
+            icon={<Icon name="calendar-month" size={20} color={colors.text} />}
+            onPress={() => setShowPicker(true)}
+            style={styles.iconBtn}
+            accessibilityLabel="달력 열기"
+          />
+        </View>
+
+        {showPicker && (
+          <DateTimePicker
+            value={parsedDate ?? new Date()}
+            mode="date"
+            display="calendar"
+            onChange={onPickerChange}
+          />
+        )}
+
+        {!parsedDate && expiryText.length > 0 && (
+          <Text style={styles.error}>날짜 형식이 올바르지 않습니다.</Text>
+        )}
+
+        <View style={styles.footer}>
+          <AppButton
+            label={mode === 'edit' ? '수정 저장' : '저장'}
+            onPress={() => onNext({ expiryDate: expiryText })}
+            disabled={!canSave}
+            style={[styles.primaryBtn, !canSave && styles.btnDisabled]}
+            textStyle={styles.primaryText}
+          />
+        </View>
       </View>
-
-      <Text style={styles.hint}>
-        숫자만 입력해도 날짜 형식이 자동으로 맞춰집니다.
-      </Text>
     </Screen>
   );
 }
-

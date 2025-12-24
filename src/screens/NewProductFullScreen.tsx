@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Camera, useCameraDevice, useCameraFormat } from 'react-native-vision-camera';
+
 import Screen from '../components/Screen';
 import { AppButton } from '../components/AppButton';
 import { colors } from '../ui/tokens/colors';
@@ -103,36 +104,36 @@ export default function NewProductFullScreen({ barcode, onBack, onSave }: Props)
 
         <Text style={styles.subText}>바코드: {barcode}</Text>
 
-        {/* 프리뷰 카드(자리/비율 유지) + 제품촬영 버튼 */}
+        {/* 프리뷰 카드: 버튼은 무조건 사진칸 안에 */}
         <View style={styles.previewCard}>
-          {photoUri ? (
-            <Image source={{ uri: photoUri }} style={styles.previewImage} resizeMode="contain" />
-          ) : (
+          {!photoUri ? (
             <View style={styles.previewPlaceholder}>
               <Text style={styles.previewPlaceholderTitle}>제품 사진이 필요해요</Text>
               <Text style={styles.previewPlaceholderDesc}>아래 버튼을 눌러 촬영하세요.</Text>
-            </View>
-          )}
 
-          <View style={styles.previewBottom}>
-            {!photoUri ? (
+              {/* ✅ 제품촬영 버튼: 사진칸 내부 */}
               <AppButton
                 label="제품촬영"
                 onPress={openCamera}
                 style={styles.captureBtn}
                 textStyle={styles.captureText}
               />
-            ) : (
-              <View style={styles.previewBtnRow}>
+            </View>
+          ) : (
+            <View style={styles.previewImageWrap}>
+              <Image source={{ uri: photoUri }} style={styles.previewImage} resizeMode="contain" />
+
+              {/* ✅ 다시찍기 버튼: 사진 위(오버레이), 사진 더 크게 */}
+              <View pointerEvents="box-none" style={styles.overlayCenter}>
                 <AppButton
                   label="다시 찍기"
                   onPress={openCamera}
-                  style={[styles.actionBtn, styles.ghostBtn]}
-                  textStyle={styles.ghostBtnText}
+                  style={styles.retakeOverlayBtn}
+                  textStyle={styles.retakeOverlayText}
                 />
               </View>
-            )}
-          </View>
+            </View>
+          )}
         </View>
 
         {/* 입력만 스크롤 */}
@@ -143,6 +144,7 @@ export default function NewProductFullScreen({ barcode, onBack, onSave }: Props)
         >
           <View style={styles.formCard}>
             <Text style={styles.label}>상품명</Text>
+
             <View style={styles.inputWrap}>
               <TextInput
                 value={name}
@@ -158,7 +160,7 @@ export default function NewProductFullScreen({ barcode, onBack, onSave }: Props)
 
             <Text style={[styles.label, { marginTop: 10 }]}>유통기한</Text>
 
-            {/* ✅ 날짜 필터 버튼 1개 */}
+            {/* 날짜 버튼 1개 */}
             <AppButton
               label={expiryDate ? formatYMD(expiryDate) : '유통기한 선택'}
               onPress={() => setShowPicker(true)}
