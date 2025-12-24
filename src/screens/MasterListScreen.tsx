@@ -17,20 +17,20 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import RNRestart from 'react-native-restart';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
 import { ScreenHeader } from '../components/ScreenHeader';
 import { SearchInput } from '../components/SearchInput';
+import { colors } from '../ui/tokens/colors';
+
 import {
   MasterProduct,
   deleteMasterProduct,
   fetchMasterProducts,
 } from '../db/sqlite';
+
 import FullscreenImageModal from './FullscreenImageModal';
 import { styles } from './MasterListScreen.styles';
-import {
-  exportMasterOnlyToDownloads,
-  importMasterOnlyFromFilePicker,
-} from '../utils/backupDb';
 
 type Props = {
   onBack: () => void;
@@ -133,54 +133,6 @@ export default function MasterListScreen({
     );
   };
 
-  const onBackupPress = async () => {
-    try {
-      await exportMasterOnlyToDownloads();
-      ToastAndroid.show('백업 파일을 내보냈습니다', ToastAndroid.SHORT);
-    } catch (e: any) {
-      Alert.alert('백업 실패', e?.message ?? String(e));
-    }
-  };
-
-  const onRestorePress = () => {
-    Alert.alert('DB 불러오기', '기존 데이터가 덮어써집니다. 계속할까요?', [
-      { text: '취소', style: 'cancel' },
-      {
-        text: '불러오기',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            const ok = await importMasterOnlyFromFilePicker();
-            if (!ok) return; // 취소 등
-
-            Alert.alert(
-              '불러오기 완료',
-              '변경사항 적용을 위해 앱을 재시작합니다.',
-              [
-                {
-                  text: '확인',
-                  onPress: () => RNRestart.Restart(),
-                },
-              ],
-              { cancelable: false },
-            );
-          } catch (e: any) {
-            const msg = e?.message ?? String(e);
-            if (
-              msg.includes('cancel') ||
-              msg.includes('Canceled') ||
-              msg.includes('cancelled') ||
-              msg.includes('User canceled')
-            ) {
-              return;
-            }
-            Alert.alert('불러오기 실패', msg);
-          }
-        },
-      },
-    ]);
-  };
-
   const renderItem = ({ item }: { item: MasterProduct }) => {
     const hasImg = !!item.thumbUri?.trim();
 
@@ -218,35 +170,26 @@ export default function MasterListScreen({
               바코드 없음
             </Text>
           )}
-
-          <View style={styles.metaCol}>
-            <Text
-              style={styles.metaText}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              등록 {item.createdAt?.slice?.(0, 10) ?? '-'}
-            </Text>
-          </View>
         </View>
 
+        {/* ✅ 카드 액션: ListScreen과 동일한 아이콘 패턴 */}
         <View style={styles.actionsCol}>
           <TouchableOpacity
-            style={styles.iconBtn}
+            style={[styles.iconBtn, styles.iconBtnEdit]}
             onPress={() => onEdit(item)}
             activeOpacity={0.85}
+            accessibilityLabel="편집"
           >
-            <Text style={styles.iconBtnText}>✎</Text>
+            <Icon name="pencil" size={20} color={colors.white} />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.iconBtn, styles.iconBtnDanger]}
+            style={[styles.iconBtn, styles.iconBtnDelete]}
             onPress={() => confirmDelete(item)}
             activeOpacity={0.85}
+            accessibilityLabel="삭제"
           >
-            <Text style={[styles.iconBtnText, styles.iconBtnTextDanger]}>
-              🗑
-            </Text>
+            <Icon name="trash-can-outline" size={20} color={colors.text} />
           </TouchableOpacity>
         </View>
       </View>
@@ -278,11 +221,21 @@ export default function MasterListScreen({
           </Text>
 
           <View style={styles.emptyBtnRow}>
-            <TouchableOpacity style={styles.ghostBtn} onPress={clearQuery}>
-              <Text style={styles.ghostBtnText}>검색어 지우기</Text>
+            <TouchableOpacity
+              style={styles.emptyIconBtn}
+              onPress={clearQuery}
+              activeOpacity={0.85}
+              accessibilityLabel="검색어 삭제"
+            >
+              <Icon name="backspace-outline" size={20} color={colors.textMuted} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.ghostBtn} onPress={onScanBarcode}>
-              <Text style={styles.ghostBtnText}>스캔</Text>
+            <TouchableOpacity
+              style={styles.scanIconBtn}
+              onPress={onScanBarcode}
+              activeOpacity={0.85}
+              accessibilityLabel="스캔"
+            >
+              <Icon name="barcode-scan" size={20} color={colors.white} />
             </TouchableOpacity>
           </View>
         </View>
@@ -292,18 +245,9 @@ export default function MasterListScreen({
     return null;
   }, [items.length, filtered.length, query, onScanBarcode]);
 
-  // ✅ 고정 헤더(FlatList 밖)
   const Header = (
     <View style={styles.stickyHeader}>
-      <ScreenHeader
-        title="보관함"
-        onBack={onBack}
-        containerStyle={styles.headerRow}
-        leftStyle={styles.backBtn}
-        backTextStyle={styles.backText}
-        titleStyle={styles.title}
-        rightStyle={styles.headerRightDummy}
-      />
+      <ScreenHeader title="보관함" onBack={onBack} sideWidth={72} />
 
       <View style={styles.controls}>
         <View style={styles.searchLine}>
@@ -318,8 +262,16 @@ export default function MasterListScreen({
               textAlignVertical="center"
             />
             {!!draftQuery.trim() && (
-              <TouchableOpacity style={styles.searchClear} onPress={clearQuery}>
-                <Text style={styles.searchClearText}>✕</Text>
+              <TouchableOpacity
+                style={styles.searchClear}
+                onPress={clearQuery}
+                accessibilityLabel="검색어 삭제"
+              >
+                <Icon
+                  name="backspace-outline"
+                  size={20}
+                  color={colors.textMuted}
+                />
               </TouchableOpacity>
             )}
           </View>
@@ -328,8 +280,9 @@ export default function MasterListScreen({
             style={styles.scanBtn}
             onPress={onScanBarcode}
             activeOpacity={0.85}
+            accessibilityLabel="스캔"
           >
-            <Text style={styles.scanBtnText}>스캔</Text>
+            <Icon name="barcode-scan" size={20} color={colors.white} />
           </TouchableOpacity>
         </View>
 
@@ -338,24 +291,6 @@ export default function MasterListScreen({
           {query.trim().length > 0 && query.trim().length < 2 && (
             <Text style={styles.hintText}>2글자부터 검색</Text>
           )}
-        </View>
-
-        <View style={styles.backupRow}>
-          <TouchableOpacity
-            style={styles.backupBtn}
-            activeOpacity={0.85}
-            onPress={onBackupPress}
-          >
-            <Text style={styles.backupBtnText}>백업</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.restoreBtn}
-            activeOpacity={0.85}
-            onPress={onRestorePress}
-          >
-            <Text style={styles.restoreBtnText}>불러오기</Text>
-          </TouchableOpacity>
         </View>
       </View>
     </View>

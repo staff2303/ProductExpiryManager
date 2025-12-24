@@ -91,6 +91,8 @@ export const styles = StyleSheet.create({
   },
 
   searchClear: {
+    position: 'absolute',
+    right: M.inputPadX,
     width: M.clearBtn,
     height: M.clearBtn,
     borderRadius: M.clearRadius,
@@ -98,25 +100,34 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.surfaceAlt,
   },
-  searchClearText: {
-    color: colors.textMuted,
-    fontWeight: '900',
-    fontSize: is(18),
-    lineHeight: is(18),
-  },
 
   scanBtn: {
     paddingHorizontal: M.pillPadX,
     paddingVertical: M.pillPadY,
     borderRadius: sp(14),
     backgroundColor: colors.secondary,
-    borderWidth: 1,
-    borderColor: colors.secondary,
     minHeight: M.inputH,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  scanBtnText: { color: colors.white, fontWeight: '900', fontSize: fs(16) },
+
+  emptyIconBtn: {
+    width: M.iconBtn,
+    height: M.iconBtn,
+    borderRadius: M.iconRadius,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceAlt,
+  },
+
+  emptyDateBtn: {
+    width: M.iconBtn,
+    height: M.iconBtn,
+    borderRadius: M.iconRadius,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceAlt,
+  },
 
   infoLine: {
     flexDirection: 'row',

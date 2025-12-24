@@ -1,3 +1,4 @@
+// src/screens/MasterListScreen.styles.ts
 import { StyleSheet } from 'react-native';
 import { colors } from '../ui/tokens/colors';
 import { fs, is, sp, sz } from '../theme/uiScale';
@@ -8,42 +9,16 @@ export const styles = StyleSheet.create({
 
   stickyHeader: {
     backgroundColor: colors.bg,
+    paddingTop: sp(6),
     paddingBottom: sp(10),
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    zIndex: 10,
+    elevation: 10,
+    position: 'relative',
   },
 
-  headerRow: {
-    paddingHorizontal: sp(16),
-    paddingTop: sp(14),
-    paddingBottom: sp(10),
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-
-  backBtn: {
-    width: M.iconBtn,
-    height: M.iconBtn,
-    borderRadius: M.iconRadius,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surfaceAlt,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  backText: {
-    color: colors.text,
-    fontSize: is(22),
-    lineHeight: is(22),
-    fontWeight: '900',
-  },
-
-  title: { color: colors.text, fontSize: fs(24), fontWeight: '900' },
-
-  headerRightDummy: { width: M.iconBtn },
-
-  controls: { paddingHorizontal: sp(16), gap: sp(8) },
+  controls: { marginTop: sp(10), paddingHorizontal: sp(16), gap: sp(8) },
 
   searchLine: { flexDirection: 'row', gap: sp(10), alignItems: 'center' },
 
@@ -67,6 +42,8 @@ export const styles = StyleSheet.create({
   },
 
   searchClear: {
+    position: 'absolute',
+    right: M.inputPadX,
     width: M.clearBtn,
     height: M.clearBtn,
     borderRadius: M.clearRadius,
@@ -74,24 +51,33 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.surfaceAlt,
   },
-  searchClearText: {
-    color: colors.textMuted,
-    fontWeight: '900',
-    fontSize: is(18),
-    lineHeight: is(18),
-  },
 
   scanBtn: {
-    paddingHorizontal: M.pillPadX,
-    paddingVertical: M.pillPadY,
-    borderRadius: sp(14),
-    backgroundColor: colors.secondarySoft,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: M.inputH,
+    width: M.iconBtn,
+    height: M.iconBtn,
+    borderRadius: M.iconRadius,
+    backgroundColor: colors.secondary,
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  scanBtnText: { color: colors.text, fontWeight: '900', fontSize: fs(16) },
+
+  emptyIconBtn: {
+    width: M.iconBtn,
+    height: M.iconBtn,
+    borderRadius: M.iconRadius,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceAlt,
+  },
+
+  scanIconBtn: {
+    width: M.iconBtn,
+    height: M.iconBtn,
+    borderRadius: M.iconRadius,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.secondary,
+  },
 
   infoLine: {
     flexDirection: 'row',
@@ -100,50 +86,6 @@ export const styles = StyleSheet.create({
   },
   countText: { color: colors.textMuted, fontSize: fs(13), fontWeight: '800' },
   hintText: { color: colors.textSubtle, fontSize: fs(12), fontWeight: '800' },
-
-  // DB 백업/불러오기
-  backupRow: {
-    flexDirection: 'row',
-    gap: sp(10),
-    alignItems: 'center',
-    marginTop: sp(2),
-  },
-
-  backupBtn: {
-    flex: 1,
-    paddingHorizontal: M.pillPadX,
-    paddingVertical: M.pillPadY,
-    borderRadius: sp(14),
-    backgroundColor: colors.primary,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    minHeight: M.inputH,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backupBtnText: {
-    color: colors.white,
-    fontWeight: '900',
-    fontSize: fs(16),
-  },
-
-  restoreBtn: {
-    flex: 1,
-    paddingHorizontal: M.pillPadX,
-    paddingVertical: M.pillPadY,
-    borderRadius: sp(14),
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: M.inputH,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  restoreBtnText: {
-    color: colors.text,
-    fontWeight: '900',
-    fontSize: fs(16),
-  },
 
   list: {
     paddingHorizontal: sp(16),
@@ -191,14 +133,15 @@ export const styles = StyleSheet.create({
 
   name: { color: colors.text, fontSize: fs(20), fontWeight: '900' },
   barcode: { color: colors.textSubtle, fontSize: fs(13), fontWeight: '800' },
-  barcodeMuted: { color: colors.textMuted, fontSize: fs(13), fontWeight: '800' },
-
-  metaCol: { gap: sp(2) },
-  metaText: { color: colors.textMuted, fontSize: fs(13), fontWeight: '800' },
+  barcodeMuted: {
+    color: colors.textMuted,
+    fontSize: fs(13),
+    fontWeight: '800',
+  },
 
   actionsCol: {
     alignSelf: 'stretch',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     gap: sp(8),
     paddingLeft: sp(4),
   },
@@ -209,21 +152,18 @@ export const styles = StyleSheet.create({
     borderRadius: M.iconRadius,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.surfaceAlt,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 1.5,
   },
-  iconBtnText: {
-    color: colors.text,
-    fontWeight: '900',
-    fontSize: is(20),
-    lineHeight: is(20),
+
+  // ✅ ListScreen과 동일한 컬러 규칙
+  iconBtnEdit: {
+    backgroundColor: colors.secondary,
+    borderColor: colors.secondary,
   },
-  iconBtnDanger: {
-    backgroundColor: colors.dangerSoft,
-    borderColor: colors.expiredBorder,
+  iconBtnDelete: {
+    backgroundColor: colors.surface,
+    borderColor: colors.borderStrong,
   },
-  iconBtnTextDanger: { color: colors.danger },
 
   emptyWrap: {
     marginTop: sp(24),
@@ -244,16 +184,6 @@ export const styles = StyleSheet.create({
   },
 
   emptyBtnRow: { flexDirection: 'row', gap: sp(10), marginTop: sp(6) },
-
-  primaryBtn: {
-    paddingHorizontal: M.pillPadX,
-    paddingVertical: 10,
-    borderRadius: sp(14),
-    backgroundColor: colors.primary,
-    minHeight: M.inputH,
-    justifyContent: 'center',
-  },
-  primaryBtnText: { color: colors.white, fontWeight: '900', fontSize: fs(16) },
 
   ghostBtn: {
     paddingHorizontal: M.pillPadX,

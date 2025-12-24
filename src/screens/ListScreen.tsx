@@ -1,5 +1,11 @@
 // src/screens/ListScreen.tsx
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   Alert,
   FlatList,
@@ -320,7 +326,10 @@ export default function ListScreen({
           <View style={styles.topRow}>
             <View style={styles.ddayRow}>
               <Icon name="calendar-clock" size={18} color={ddayColor} />
-              <Text style={[styles.ddayText, { color: ddayColor }]} numberOfLines={1}>
+              <Text
+                style={[styles.ddayText, { color: ddayColor }]}
+                numberOfLines={1}
+              >
                 {dday}
               </Text>
             </View>
@@ -337,10 +346,18 @@ export default function ListScreen({
           )}
 
           <View style={styles.metaCol}>
-            <Text style={styles.metaText} numberOfLines={1} ellipsizeMode="tail">
+            <Text
+              style={styles.metaText}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               유통기한 {item.expiryDate}
             </Text>
-            <Text style={styles.metaText} numberOfLines={1} ellipsizeMode="tail">
+            <Text
+              style={styles.metaText}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               등록 {item.createdAt.slice(0, 10)}
             </Text>
           </View>
@@ -378,10 +395,15 @@ export default function ListScreen({
       return (
         <View style={styles.emptyWrap}>
           <Text style={styles.emptyTitle}>아직 등록된 제품이 없어요</Text>
-          <Text style={styles.emptyDesc}>바코드를 스캔하거나 직접 추가해보세요.</Text>
+          <Text style={styles.emptyDesc}>
+            바코드를 스캔하거나 직접 추가해보세요.
+          </Text>
 
           <View style={styles.emptyBtnRow}>
-            <TouchableOpacity style={styles.emptySecondaryBtn} onPress={onScanBarcode}>
+            <TouchableOpacity
+              style={styles.emptySecondaryBtn}
+              onPress={onScanBarcode}
+            >
               <Icon name="barcode-scan" size={20} color={colors.white} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.emptyPrimaryBtn} onPress={onAddNew}>
@@ -399,11 +421,29 @@ export default function ListScreen({
           <Text style={styles.emptyDesc}>조건을 지우고 다시 확인해보세요.</Text>
 
           <View style={styles.emptyBtnRow}>
-            <TouchableOpacity style={styles.ghostBtn} onPress={clearQuery}>
-              <Icon name="backspace-outline" size={20} color={colors.primary} />
+            <TouchableOpacity
+              style={styles.emptyIconBtn}
+              onPress={clearQuery}
+              activeOpacity={0.85}
+              accessibilityLabel="검색어 삭제"
+            >
+              <Icon
+                name="backspace-outline"
+                size={20}
+                color={colors.textMuted}
+              />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.ghostBtn} onPress={clearDateFilter}>
-              <Icon name="calendar-remove-outline" size={20} color={colors.primary} />
+            <TouchableOpacity
+              style={styles.emptyDateBtn}
+              onPress={clearDateFilter}
+              activeOpacity={0.85}
+              accessibilityLabel="날짜 삭제"
+            >
+              <Icon
+                name="calendar-remove-outline"
+                size={20}
+                color={colors.textMuted}
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -411,7 +451,14 @@ export default function ListScreen({
     }
 
     return null;
-  }, [originalItems.length, filteredItems.length, dateFilter, query, onAddNew, onScanBarcode]);
+  }, [
+    originalItems.length,
+    filteredItems.length,
+    dateFilter,
+    query,
+    onAddNew,
+    onScanBarcode,
+  ]);
 
   // ✅ 고정 헤더(FlatList 밖으로 이동)
   const Header = (
@@ -446,19 +493,31 @@ export default function ListScreen({
               value={draftQuery}
               onChangeText={setDraftQuery}
               placeholder="상품명 검색 (2글자 이상)"
-              placeholderTextColor="#6B7280"
+              placeholderTextColor="#777"
               inputStyle={styles.searchInput}
               returnKeyType="search"
               textAlignVertical="center"
             />
             {!!draftQuery.trim() && (
-              <TouchableOpacity style={styles.searchClear} onPress={clearQuery}>
-                <Text style={styles.searchClearText}>✕</Text>
+              <TouchableOpacity
+                style={styles.searchClear}
+                onPress={clearQuery}
+                accessibilityLabel="검색어 삭제"
+              >
+                <Icon
+                  name="backspace-outline"
+                  size={20}
+                  color={colors.textMuted}
+                />
               </TouchableOpacity>
             )}
           </View>
 
-          <TouchableOpacity style={styles.scanBtn} onPress={onScanBarcode} accessibilityLabel="스캔">
+          <TouchableOpacity
+            style={styles.scanBtn}
+            onPress={onScanBarcode}
+            accessibilityLabel="스캔"
+          >
             <Icon name="barcode-scan" size={20} color={colors.white} />
           </TouchableOpacity>
         </View>
@@ -484,7 +543,11 @@ export default function ListScreen({
                 color={displayDate ? colors.primary : colors.text}
               />
               {!!displayDate && (
-                <Text style={styles.filterChipLabel} numberOfLines={1} ellipsizeMode="tail">
+                <Text
+                  style={styles.filterChipLabel}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
                   {displayDate}
                 </Text>
               )}
@@ -535,7 +598,10 @@ export default function ListScreen({
         animationType="fade"
         onRequestClose={() => setViewerOpen(false)}
       >
-        <FullscreenImageModal uri={viewerUri ?? ''} onClose={() => setViewerOpen(false)} />
+        <FullscreenImageModal
+          uri={viewerUri ?? ''}
+          onClose={() => setViewerOpen(false)}
+        />
       </Modal>
     </SafeAreaView>
   );
