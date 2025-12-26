@@ -31,6 +31,11 @@ import {
 import FullscreenImageModal from './FullscreenImageModal';
 import { styles } from './MasterListScreen.styles';
 
+import {
+  exportFullBackupZipToDownloads,
+  importFullBackupZipFromPicker,
+} from '../utils/backupDb';
+
 type Props = {
   onBack: () => void;
   onEdit: (p: MasterProduct) => void;
@@ -130,6 +135,31 @@ export default function MasterListScreen({
       ],
       { cancelable: true },
     );
+  };
+
+  //백업 및 복원 핸들러
+  const onBackupZip = async () => {
+    try {
+      const ok = await exportFullBackupZipToDownloads();
+      if (ok) {
+        Alert.alert('백업 완료', '선택한 위치에 ZIP 파일이 저장되었습니다.');
+      }
+    } catch (e: any) {
+      Alert.alert('백업 실패', e?.message ?? String(e));
+    }
+  };
+
+  const onRestoreZip = async () => {
+    try {
+      const ok = await importFullBackupZipFromPicker();
+      if (ok) {
+        await load(); // ✅ 추가
+        clearQuery(); // (선택) 검색어 초기화
+        Alert.alert('복원 완료', '목록을 갱신했습니다.');
+      }
+    } catch (e: any) {
+      Alert.alert('복원 실패', e?.message ?? String(e));
+    }
   };
 
   const renderItem = ({ item }: { item: MasterProduct }) => {
@@ -294,6 +324,46 @@ export default function MasterListScreen({
             accessibilityLabel="스캔"
           >
             <Icon name="barcode-scan" size={20} color={colors.white} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+          <TouchableOpacity
+            onPress={onBackupZip}
+            activeOpacity={0.85}
+            style={{
+              flex: 1,
+              paddingVertical: 10,
+              borderRadius: 10,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: colors.primary,
+            }}
+            accessibilityLabel="ZIP 백업"
+          >
+            <Text style={{ color: colors.white, fontWeight: '700' }}>
+              ZIP 백업
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={onRestoreZip}
+            activeOpacity={0.85}
+            style={{
+              flex: 1,
+              paddingVertical: 10,
+              borderRadius: 10,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: colors.white,
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}
+            accessibilityLabel="ZIP 불러오기"
+          >
+            <Text style={{ color: colors.text, fontWeight: '700' }}>
+              ZIP 불러오기
+            </Text>
           </TouchableOpacity>
         </View>
 

@@ -406,7 +406,7 @@ export default function ListScreen({
               <Icon name="barcode-scan" size={20} color={colors.white} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.emptyPrimaryBtn} onPress={onAddNew}>
-              <Icon name="plus" size={22} color={colors.white} />
+              <Icon name="plus" size={20} color={colors.white} />
             </TouchableOpacity>
           </View>
         </View>

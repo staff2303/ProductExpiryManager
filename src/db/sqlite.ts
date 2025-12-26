@@ -1,14 +1,53 @@
 // src/db/sqlite.ts
 import SQLite from 'react-native-sqlite-storage';
+import RNFS from 'react-native-fs';
 
 SQLite.enablePromise(true);
 
-const DB_NAME = 'product_manager.db';
+export const DB_NAME = 'product_manager.db';
 let db: any = null;
+
+
+async function getDefaultDbPath(): Promise<string | null> {
+  // Best-effort: react-native-sqlite-storage default locations
+  // Android: /data/user/0/<package>/databases/<db>
+  // RNFS.DocumentDirectoryPath is /data/user/0/<package>/files
+  if (RNFS.DocumentDirectoryPath) {
+    const androidGuess = RNFS.DocumentDirectoryPath.replace(/\/files$/, '/databases');
+    return `${androidGuess}/${DB_NAME}`;
+  }
+  return null;
+}
+
+async function migrateDbIfNeeded() {
+  // If we switch to location:'Documents', existing users may still have DB in the old default path.
+  // This is best-effort; if not found, we simply start fresh in Documents.
+  const targetPath = `${RNFS.DocumentDirectoryPath}/${DB_NAME}`;
+
+  try {
+    const targetExists = await RNFS.exists(targetPath);
+    if (targetExists) return;
+
+    const oldPath = await getDefaultDbPath();
+    if (!oldPath) return;
+
+    const oldExists = await RNFS.exists(oldPath);
+    if (!oldExists) return;
+
+    // Ensure Documents dir exists
+    await RNFS.mkdir(RNFS.DocumentDirectoryPath);
+
+    await RNFS.copyFile(oldPath, targetPath);
+  } catch {
+    // ignore migration failures; DB will be created fresh
+  }
+}
 
 export async function getDb() {
   if (db) return db;
-  db = await SQLite.openDatabase({ name: DB_NAME, location: 'default' });
+
+  await migrateDbIfNeeded();
+  db = await SQLite.openDatabase({ name: DB_NAME, location: 'Documents' });
 
   // ✅ SQLite는 기본으로 FK가 꺼져있는 경우가 많아서 반드시 ON
   try {

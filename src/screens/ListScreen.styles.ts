@@ -320,8 +320,6 @@ export const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: sp(14),
     backgroundColor: colors.primary,
-    borderWidth: 1,
-    borderColor: colors.primaryPressed,
     minHeight: M.inputH,
     justifyContent: 'center',
     alignItems: 'center',
