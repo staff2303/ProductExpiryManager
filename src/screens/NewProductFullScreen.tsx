@@ -35,19 +35,25 @@ function formatYMD(d: Date) {
 
 type Props = {
   barcode: string;
+
+  /** true: 유통기한까지 입력(기본), false: 유통기한 없이 보관함 DB만 저장 */
+  requireExpiry?: boolean;
+
   onBack: () => void;
   onSave: (payload: {
     photoUri: string;
     name: string;
-    expiryDate: string;
+    expiryDate?: string; // ✅ optional
   }) => Promise<void>;
 };
 
 export default function NewProductFullScreen({
   barcode,
+  requireExpiry = true, // ✅ 기본값 true
   onBack,
   onSave,
 }: Props) {
+
   const device = useCameraDevice('back');
   const cameraRef = useRef<Camera>(null);
 
@@ -78,8 +84,9 @@ export default function NewProductFullScreen({
   }, []);
 
   const canSave = useMemo(() => {
-    return !!photoUri && name.trim().length > 0 && !!expiryDate && !saving;
-  }, [photoUri, name, expiryDate, saving]);
+    const baseOk = !!photoUri && name.trim().length > 0 && !saving;
+    return requireExpiry ? baseOk && !!expiryDate : baseOk;
+  }, [photoUri, name, expiryDate, saving, requireExpiry]);
 
   const openCamera = async () => {
     if (!hasPermission) {
@@ -172,30 +179,35 @@ export default function NewProductFullScreen({
               />
             </View>
 
-            <Text style={[styles.label, { marginTop: 10 }]}>유통기한</Text>
+            {/* ✅ requireExpiry일 때만 유통기한 섹션 표시 */}
+            {requireExpiry && (
+              <>
+                <Text style={[styles.label, { marginTop: 10 }]}>유통기한</Text>
 
-            <AppButton
-              label={expiryDate ? formatYMD(expiryDate) : '유통기한 선택'}
-              onPress={() => setShowPicker(true)}
-              style={[styles.datePill, !expiryDate && styles.datePillEmpty]}
-              textStyle={[
-                styles.datePillText,
-                !expiryDate && styles.datePillTextEmpty,
-              ]}
-            />
+                <AppButton
+                  label={expiryDate ? formatYMD(expiryDate) : '유통기한 선택'}
+                  onPress={() => setShowPicker(true)}
+                  style={[styles.datePill, !expiryDate && styles.datePillEmpty]}
+                  textStyle={[
+                    styles.datePillText,
+                    !expiryDate && styles.datePillTextEmpty,
+                  ]}
+                />
 
-            {showPicker && (
-              <DateTimePicker
-                value={expiryDate ?? new Date()}
-                mode="date"
-                display="calendar"
-                onChange={onPickerChange}
-              />
+                {showPicker && (
+                  <DateTimePicker
+                    value={expiryDate ?? new Date()}
+                    mode="date"
+                    display="calendar"
+                    onChange={onPickerChange}
+                  />
+                )}
+
+                <Text style={styles.hint}>
+                  날짜를 선택하면 저장 버튼이 활성화됩니다.
+                </Text>
+              </>
             )}
-
-            <Text style={styles.hint}>
-              날짜를 선택하면 저장 버튼이 활성화됩니다.
-            </Text>
           </View>
         </ScrollView>
 
@@ -211,13 +223,17 @@ export default function NewProductFullScreen({
             ]}
             textStyle={styles.primaryBtnText}
             onPress={async () => {
-              if (!photoUri || !expiryDate) return;
+              if (!photoUri) return;
+              if (requireExpiry && !expiryDate) return;
+
               try {
                 setSaving(true);
                 await onSave({
                   photoUri,
                   name: name.trim(),
-                  expiryDate: formatYMD(expiryDate),
+                  expiryDate: requireExpiry
+                    ? formatYMD(expiryDate!)
+                    : undefined,
                 });
                 ToastAndroid.show('저장했습니다', ToastAndroid.SHORT);
               } finally {

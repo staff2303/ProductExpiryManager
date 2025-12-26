@@ -27,7 +27,7 @@ export default function MasterEditScreen({
   return (
     // ✅ Screen 기본 padding 제거 (화면 테두리 뜨는 느낌 제거)
     <Screen padding={0} contentStyle={{ paddingBottom: 40 }}>
-      <AppHeader title="총상품 편집" onBack={onBack} />
+      <AppHeader title="보관함 편집" onBack={onBack} />
 
       {/* ✅ 본문만 패딩 적용 (ListScreen 톤) */}
       <View style={styles.body}>

@@ -32,9 +32,20 @@ import {
 import { createResizedImages } from './src/utils/imageResize';
 import { STEPS, type Step } from './src/navigation/steps';
 
-
 export default function App() {
   const [step, setStep] = useState<Step>(STEPS.LIST);
+
+  // NEW_PRODUCT_FULL에서 유통기한 입력 필요 여부
+  // - true : 기존처럼 유통기한까지 입력 후 저장(유통기한관리 흐름)
+  // - false: 보관함(마스터)만 저장(유통기한/재고 저장 X)
+  const [newProductRequireExpiry, setNewProductRequireExpiry] = useState(true);
+
+  // NEW_PRODUCT_FULL 진입 출처
+  // EXPIRY: 유통기한관리(ListScreen) 흐름
+  // MASTER: 보관함(MasterListScreen) 흐름
+  const [newProductFrom, setNewProductFrom] = useState<'EXPIRY' | 'MASTER'>(
+    'EXPIRY',
+  );
 
   // 재고 확인 모달
   const [inventoryToCheck, setInventoryToCheck] = useState<InventoryRow | null>(
@@ -54,7 +65,7 @@ export default function App() {
   const [editing, setEditing] = useState<InventoryRow | null>(null);
   const [editUri, setEditUri] = useState<string | null>(null);
 
-  // 총상품 DB 관리
+  // 보관함(마스터) 관리
   const [masterReload, setMasterReload] = useState(0);
   const [editingMaster, setEditingMaster] = useState<MasterProduct | null>(
     null,
@@ -67,6 +78,20 @@ export default function App() {
   useEffect(() => {
     initDb().catch(e => console.error('initDb error', e));
   }, []);
+
+  const goBackFromNewProduct = () => {
+    // 공통 정리
+    setBarcode(null);
+    setProductId(null);
+    setProductImageUri(null);
+
+    // 출처에 따라 복귀
+    setStep(newProductFrom === 'MASTER' ? STEPS.MASTER_LIST : STEPS.LIST);
+
+    // 모드 원복
+    setNewProductRequireExpiry(true);
+    setNewProductFrom('EXPIRY');
+  };
 
   // Android 뒤로가기
   useEffect(() => {
@@ -120,8 +145,8 @@ export default function App() {
       }
 
       if (step === STEPS.NEW_PRODUCT_FULL) {
-        setBarcode(null);
-        setStep(STEPS.LIST);
+        // ✅ NEW_PRODUCT_FULL은 출처에 따라 복귀
+        goBackFromNewProduct();
         return true;
       }
 
@@ -160,7 +185,7 @@ export default function App() {
     });
 
     return () => sub.remove();
-  }, [step]);
+  }, [step, newProductFrom]);
 
   return (
     <View style={{ flex: 1 }}>
@@ -202,6 +227,7 @@ export default function App() {
           );
         }
 
+        // 보관함(마스터)에서 스캔
         if (step === STEPS.MASTER_SCAN) {
           return (
             <BarcodeScanScreen
@@ -215,13 +241,21 @@ export default function App() {
                 } else {
                   Alert.alert(
                     '상품 없음',
-                    '해당 바코드의 상품이 총상품 DB에 없습니다. 새로 등록하시겠습니까?',
+                    '해당 바코드의 상품이 [보관함]에 없습니다. 새로 등록하시겠습니까?',
                     [
                       { text: '취소', style: 'cancel' },
                       {
                         text: '새로 등록',
                         onPress: () => {
+                          console.log(
+                            '[PATH] MASTER_SCAN -> NEW_PRODUCT_FULL (requireExpiry=false)',
+                          );
                           setBarcode(code);
+
+                          // ✅ 보관함에서 등록: 유통기한 없이 마스터만 저장
+                          setNewProductFrom('MASTER');
+                          setNewProductRequireExpiry(false);
+
                           setStep(STEPS.NEW_PRODUCT_FULL);
                         },
                       },
@@ -280,7 +314,11 @@ export default function App() {
           );
         }
 
-        if (step === STEPS.MASTER_EDIT_PREVIEW && editingMaster && masterEditUri) {
+        if (
+          step === STEPS.MASTER_EDIT_PREVIEW &&
+          editingMaster &&
+          masterEditUri
+        ) {
           return (
             <PreviewScreen
               uri={masterEditUri}
@@ -294,6 +332,7 @@ export default function App() {
           );
         }
 
+        // 유통기한관리에서 신규 등록(스캔)
         if (step === STEPS.SCAN) {
           return (
             <BarcodeScanScreen
@@ -317,6 +356,14 @@ export default function App() {
                     setStep(STEPS.EXPIRY);
                   }
                 } else {
+                  console.log(
+                    '[PATH] SCAN -> NEW_PRODUCT_FULL (requireExpiry=true)',
+                  );
+
+                  // ✅ 유통기한관리에서 등록: 유통기한 포함
+                  setNewProductFrom('EXPIRY');
+                  setNewProductRequireExpiry(true);
+
                   setStep(STEPS.NEW_PRODUCT_FULL);
                 }
               }}
@@ -324,13 +371,54 @@ export default function App() {
           );
         }
 
+        // 유통기한관리에서 바코드로 찾기
         if (step === STEPS.LIST_SCAN) {
           return (
             <BarcodeScanScreen
               onBack={() => setStep(STEPS.LIST)}
-              onScanned={code => {
-                setListQuery(code);
-                setStep(STEPS.LIST);
+              onScanned={async code => {
+                const master = await getMasterByBarcode(code);
+
+                if (master) {
+                  const inventory = await getInventoryByProductId(master.id);
+
+                  if (inventory) {
+                    setListQuery(code);
+                    setStep(STEPS.LIST);
+                    return;
+                  }
+
+                  setBarcode(code);
+                  setProductId(master.id);
+                  setProductImageUri(master.imageUri);
+                  setStep(STEPS.EXPIRY);
+                  return;
+                }
+
+                // 유통기한관리 쪽에서 없는 상품이면: 새로 등록(유통기한 포함)
+                Alert.alert(
+                  '상품 없음',
+                  '해당 바코드의 상품이 [보관함]에 없습니다. 새로 등록하시겠습니까?',
+                  [
+                    { text: '취소', style: 'cancel' },
+                    {
+                      text: '새로 등록',
+                      onPress: () => {
+                        console.log(
+                          '[PATH] LIST_SCAN -> NEW_PRODUCT_FULL (requireExpiry=true)',
+                        );
+
+                        setBarcode(code);
+
+                        // ✅ 유통기한관리에서 등록: 유통기한 포함
+                        setNewProductFrom('EXPIRY');
+                        setNewProductRequireExpiry(true);
+
+                        setStep(STEPS.NEW_PRODUCT_FULL);
+                      },
+                    },
+                  ],
+                );
               }}
             />
           );
@@ -340,12 +428,12 @@ export default function App() {
           return (
             <NewProductFullScreen
               barcode={barcode}
-              onBack={() => {
-                setBarcode(null);
-                setStep(STEPS.LIST);
-              }}
+              requireExpiry={newProductRequireExpiry}
+              onBack={goBackFromNewProduct}
               onSave={async ({ photoUri, name, expiryDate }) => {
-                const { mainUri, thumbUri } = await createResizedImages(photoUri);
+                const { mainUri, thumbUri } = await createResizedImages(
+                  photoUri,
+                );
 
                 const id = await upsertMasterProduct({
                   barcode,
@@ -355,11 +443,14 @@ export default function App() {
                   createdAt: new Date().toISOString(),
                 });
 
-                await insertOrUpdateEarliestExpiry(
-                  id,
-                  expiryDate,
-                  new Date().toISOString(),
-                );
+                // requireExpiry=true일 때만 재고/유통기한 저장
+                if (newProductRequireExpiry) {
+                  await insertOrUpdateEarliestExpiry(
+                    id,
+                    expiryDate as string,
+                    new Date().toISOString(),
+                  );
+                }
 
                 setBarcode(null);
                 setProductId(null);
@@ -368,7 +459,14 @@ export default function App() {
                 setMasterReload(s => s + 1);
                 setReloadSignal(s => s + 1);
 
-                setStep(STEPS.LIST);
+                // ✅ 저장 후 출처에 따라 복귀
+                setStep(
+                  newProductFrom === 'MASTER' ? STEPS.MASTER_LIST : STEPS.LIST,
+                );
+
+                // 원복
+                setNewProductRequireExpiry(true);
+                setNewProductFrom('EXPIRY');
               }}
             />
           );
@@ -424,7 +522,9 @@ export default function App() {
                 await updateInventoryExpiry(editing.inventoryId, expiryDate);
 
                 if (editUri) {
-                  const { mainUri, thumbUri } = await createResizedImages(editUri);
+                  const { mainUri, thumbUri } = await createResizedImages(
+                    editUri,
+                  );
                   await updateMasterPhoto(editing.productId, mainUri, thumbUri);
                   setMasterReload(s => s + 1);
                 }
