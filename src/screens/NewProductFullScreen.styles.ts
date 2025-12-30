@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { colors } from '../ui/tokens/colors';
 
 export const styles = StyleSheet.create({
@@ -32,7 +32,7 @@ export const styles = StyleSheet.create({
 
   previewImageWrap: {
     width: '100%',
-    height: 320, // ✅ 버튼을 아래로 빼지 않아서 사진을 더 크게 쓸 수 있음
+    height: 320,
     backgroundColor: colors.surfaceAlt,
   },
 
@@ -64,7 +64,7 @@ export const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
-  /* ✅ 제품촬영 버튼 (사진칸 내부) */
+  /* 제품촬영 버튼 (사진칸 내부) */
   captureBtn: {
     borderRadius: 999,
     minHeight: 46,
@@ -80,12 +80,12 @@ export const styles = StyleSheet.create({
     fontWeight: '900',
   },
 
-  /* ✅ 다시찍기 오버레이 */
+  /* 다시찍기 오버레이 */
   overlayCenter: {
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 14, // ✅ 하단 여백
+    bottom: 14,
     alignItems: 'center',
   },
 
@@ -111,7 +111,7 @@ export const styles = StyleSheet.create({
   formScrollContent: {
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 140,
+    paddingBottom: 20, // ✅ footer 높이를 JS에서 더해줌
   },
 
   formCard: {
@@ -145,6 +145,7 @@ export const styles = StyleSheet.create({
     fontSize: 16,
   },
 
+  /* 날짜 버튼 */
   datePill: {
     borderRadius: 999,
     minHeight: 46,
@@ -176,18 +177,24 @@ export const styles = StyleSheet.create({
     fontWeight: '800',
   },
 
-  /* 하단 고정 저장 버튼 */
+  /* ✅ 하단 저장 버튼: absolute 제거 (키보드 안정) */
   footerFixed: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
     paddingHorizontal: 16,
     paddingTop: 10,
     paddingBottom: 18,
     backgroundColor: colors.bg,
     borderTopWidth: 1,
     borderTopColor: colors.border,
+
+    ...Platform.select({
+      android: { elevation: 8 },
+      ios: {
+        shadowColor: '#000',
+        shadowOpacity: 0.08,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: -4 },
+      },
+    }),
   },
 
   actionBtn: {

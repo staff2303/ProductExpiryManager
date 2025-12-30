@@ -1,15 +1,14 @@
+// src/screens/ExpiryScreen.tsx
 import React, { useMemo, useState } from 'react';
-import { Image, Platform, Text, TextInput, View } from 'react-native';
+import { Image, Platform, Text, View } from 'react-native';
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import Screen from '../components/Screen';
 import AppHeader from '../components/AppHeader';
 import { AppButton } from '../components/AppButton';
 import { styles } from './ExpiryScreen.styles';
-import { colors } from '../ui/tokens/colors';
 
 type Props = {
   uri: string;
@@ -26,12 +25,6 @@ function pad2(n: number) {
 }
 function formatYMD(d: Date) {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-}
-function autoFormatYMD(input: string) {
-  const nums = input.replace(/\D/g, '').slice(0, 8);
-  if (nums.length <= 4) return nums;
-  if (nums.length <= 6) return `${nums.slice(0, 4)}-${nums.slice(4)}`;
-  return `${nums.slice(0, 4)}-${nums.slice(4, 6)}-${nums.slice(6)}`;
 }
 function parseYMD(s: string): Date | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
@@ -52,21 +45,29 @@ export default function ExpiryScreen({
   onNext,
   onRetakePhoto,
 }: Props) {
-  const [expiryText, setExpiryText] = useState(initialExpiryDate);
+  const [expiryDate, setExpiryDate] = useState<Date | null>(() =>
+    initialExpiryDate ? parseYMD(initialExpiryDate) : null,
+  );
   const [showPicker, setShowPicker] = useState(false);
 
-  const parsedDate = useMemo(() => parseYMD(expiryText), [expiryText]);
-  const canSave = !!parsedDate;
+  const expiryText = useMemo(
+    () => (expiryDate ? formatYMD(expiryDate) : ''),
+    [expiryDate],
+  );
+
+  const canSave = !!expiryDate;
 
   const onPickerChange = (event: DateTimePickerEvent, selected?: Date) => {
     if (Platform.OS === 'android') setShowPicker(false);
     if (event.type === 'dismissed' || !selected) return;
-    setExpiryText(formatYMD(selected));
+
+    const d = new Date(selected);
+    d.setHours(0, 0, 0, 0);
+    setExpiryDate(d);
   };
 
   return (
     <Screen padding={0}>
-      {/* ✅ 공용 헤더로 통합 */}
       <AppHeader
         title={mode === 'edit' ? '유통기한 수정' : '유통기한 등록'}
         onBack={onBack}
@@ -82,7 +83,6 @@ export default function ExpiryScreen({
               resizeMode="contain"
             />
 
-            {/* ✅ 다시 찍기 버튼: 이미지 안 가운데 하단 */}
             {mode === 'edit' && onRetakePhoto && (
               <View pointerEvents="box-none" style={styles.overlayBottomCenter}>
                 <AppButton
@@ -96,42 +96,27 @@ export default function ExpiryScreen({
           </View>
         </View>
 
-        {/* ===== 유통기한 입력 ===== */}
+        {/* ===== 유통기한 입력(버튼-only) ===== */}
         <Text style={styles.label}>유통기한</Text>
 
-        <View style={styles.dateRow}>
-          <TextInput
-            value={expiryText}
-            onChangeText={v => setExpiryText(autoFormatYMD(v))}
-            placeholder="YYYY-MM-DD"
-            style={[
-              styles.input,
-              !parsedDate && expiryText.length > 0 ? styles.inputInvalid : null,
-            ]}
-            keyboardType="number-pad"
-            maxLength={10}
-            placeholderTextColor={colors.textSubtle}
-          />
-
-          <AppButton
-            icon={<Icon name="calendar-month" size={20} color={colors.text} />}
-            onPress={() => setShowPicker(true)}
-            style={styles.iconBtn}
-            accessibilityLabel="달력 열기"
-          />
-        </View>
+        <AppButton
+          label={expiryDate ? formatYMD(expiryDate) : '유통기한 선택'}
+          onPress={() => setShowPicker(true)}
+          style={[styles.datePill, !expiryDate && styles.datePillEmpty]}
+          textStyle={[
+            styles.datePillText,
+            !expiryDate && styles.datePillTextEmpty,
+          ]}
+          accessibilityLabel="유통기한 선택"
+        />
 
         {showPicker && (
           <DateTimePicker
-            value={parsedDate ?? new Date()}
+            value={expiryDate ?? new Date()}
             mode="date"
             display="calendar"
             onChange={onPickerChange}
           />
-        )}
-
-        {!parsedDate && expiryText.length > 0 && (
-          <Text style={styles.error}>날짜 형식이 올바르지 않습니다.</Text>
         )}
 
         <View style={styles.footer}>

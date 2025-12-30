@@ -5,18 +5,6 @@ import { fs, sp } from '../theme/uiScale';
 import { M } from '../theme/metrics';
 
 export const styles = StyleSheet.create({
-  
-  iconBtn: {
-    width: M.iconBtn,
-    height: M.iconBtn,
-    borderRadius: M.iconRadius,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-
   body: {
     paddingHorizontal: sp(16),
     paddingTop: sp(14),
@@ -34,23 +22,30 @@ export const styles = StyleSheet.create({
 
   label: { color: colors.text, fontSize: fs(14), fontWeight: '900' },
 
-  dateRow: { flexDirection: 'row', gap: sp(10), alignItems: 'center' },
-
-  input: {
-    flex: 1,
+  /* ✅ 버튼-only 날짜 선택 UI */
+  datePill: {
+    borderRadius: 999,
     minHeight: M.inputH,
+    paddingHorizontal: sp(16),
+    paddingVertical: sp(12),
+    backgroundColor: colors.surfaceAlt,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: sp(14),
-    paddingHorizontal: M.inputPadX,
-    paddingVertical: M.inputPadY,
-    color: colors.text,
-    backgroundColor: colors.surface,
-    fontSize: fs(16),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: sp(2),
   },
-  inputInvalid: { borderColor: colors.invalid },
-
-  error: { color: colors.danger, fontSize: fs(12), fontWeight: '800' },
+  datePillEmpty: {
+    backgroundColor: colors.surface,
+  },
+  datePillText: {
+    color: colors.text,
+    fontSize: fs(14),
+    fontWeight: '900',
+  },
+  datePillTextEmpty: {
+    color: colors.textSubtle,
+  },
 
   footer: { marginTop: sp(6) },
   primaryBtn: {

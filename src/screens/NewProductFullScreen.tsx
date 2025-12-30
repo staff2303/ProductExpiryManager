@@ -1,12 +1,17 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  findNodeHandle,
   Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  LayoutChangeEvent,
   Modal,
   Platform,
   ScrollView,
   Text,
   TextInput,
   ToastAndroid,
+  UIManager,
   View,
 } from 'react-native';
 import DateTimePicker, {
@@ -35,25 +40,21 @@ function formatYMD(d: Date) {
 
 type Props = {
   barcode: string;
-
-  /** true: 유통기한까지 입력(기본), false: 유통기한 없이 보관함 DB만 저장 */
   requireExpiry?: boolean;
-
   onBack: () => void;
   onSave: (payload: {
     photoUri: string;
     name: string;
-    expiryDate?: string; // ✅ optional
+    expiryDate?: string;
   }) => Promise<void>;
 };
 
 export default function NewProductFullScreen({
   barcode,
-  requireExpiry = true, // ✅ 기본값 true
+  requireExpiry = true,
   onBack,
   onSave,
 }: Props) {
-
   const device = useCameraDevice('back');
   const cameraRef = useRef<Camera>(null);
 
@@ -70,6 +71,68 @@ export default function NewProductFullScreen({
   const [expiryDate, setExpiryDate] = useState<Date | null>(null);
   const [showPicker, setShowPicker] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // ✅ 키보드/스크롤 보정
+  const scrollRef = useRef<ScrollView>(null);
+  const nameInputRef = useRef<TextInput>(null);
+
+  const [keyboardH, setKeyboardH] = useState(0);
+  const [footerH, setFooterH] = useState(0);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', e => {
+      const h = e.endCoordinates?.height ?? 0;
+      setKeyboardH(h);
+
+      // 키보드 뜬 직후 + 살짝 뒤에 한 번 더 보정(기기별 타이밍)
+      setTimeout(() => {
+        if (nameInputRef.current?.isFocused()) ensureVisible();
+      }, 0);
+      setTimeout(() => {
+        if (nameInputRef.current?.isFocused()) ensureVisible();
+      }, 80);
+    });
+
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardH(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  /**
+   * ✅ 경고 제거 버전:
+   * - ref.measureLayout() 대신 UIManager.measureLayout() 사용
+   * - inputTag / innerTag를 findNodeHandle로 숫자 태그로 만든 뒤 측정
+   */
+  const ensureVisible = () => {
+    const scroller = scrollRef.current;
+    const input = nameInputRef.current;
+    if (!scroller || !input) return;
+
+    const inputTag = findNodeHandle(input);
+
+    // ScrollView inner view 태그
+    // RN 버전에 따라 getInnerViewNode가 없을 수도 있어서 방어
+    // @ts-ignore
+    const inner = scroller.getInnerViewNode?.() ?? scroller;
+    const innerTag = typeof inner === 'number' ? inner : findNodeHandle(inner);
+
+    if (!inputTag || !innerTag) return;
+
+    UIManager.measureLayout(
+      inputTag,
+      innerTag,
+      () => {},
+      (x, y) => {
+        const targetY = Math.max(0, y - 80); // 위 여유
+        scroller.scrollTo({ y: targetY, animated: true });
+      },
+    );
+  };
 
   useEffect(() => {
     (async () => {
@@ -111,75 +174,89 @@ export default function NewProductFullScreen({
     setExpiryDate(selected);
   };
 
-  return (
-    // ✅ 핵심: Screen 기본 padding 제거 → 헤더/전체가 딱 붙음
-    <Screen padding={0} contentStyle={styles.screen} scroll={false}>
-      <View style={styles.root}>
-        <AppHeader title="새 상품 등록" onBack={onBack} />
+  const onFooterLayout = (e: LayoutChangeEvent) => {
+    setFooterH(e.nativeEvent.layout.height);
+  };
 
+  return (
+    <Screen padding={0} contentStyle={styles.screen} scroll={false}>
+      <KeyboardAvoidingView
+        style={styles.root}
+        enabled={Platform.OS === 'ios'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <AppHeader title="새 상품 등록" onBack={onBack} />
         <Text style={styles.subText}>바코드: {barcode}</Text>
 
-        {/* 프리뷰 카드: 버튼은 무조건 사진칸 안에 */}
-        <View style={styles.previewCard}>
-          {!photoUri ? (
-            <View style={styles.previewPlaceholder}>
-              <Text style={styles.previewPlaceholderTitle}>
-                제품 사진이 필요해요
-              </Text>
-              <Text style={styles.previewPlaceholderDesc}>
-                아래 버튼을 눌러 촬영하세요.
-              </Text>
+        {/* ✅ A 방식: 사진칸까지 ScrollView 안으로 */}
+        <ScrollView
+          ref={scrollRef}
+          style={styles.formScroll}
+          contentContainerStyle={[
+            styles.formScrollContent,
+            { paddingBottom: footerH + keyboardH + 24 },
+          ]}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
+          {/* 프리뷰 카드(스크롤됨) */}
+          <View style={styles.previewCard}>
+            {!photoUri ? (
+              <View style={styles.previewPlaceholder}>
+                <Text style={styles.previewPlaceholderTitle}>
+                  제품 사진이 필요해요
+                </Text>
+                <Text style={styles.previewPlaceholderDesc}>
+                  아래 버튼을 눌러 촬영하세요.
+                </Text>
 
-              <AppButton
-                label="제품촬영"
-                onPress={openCamera}
-                style={styles.captureBtn}
-                textStyle={styles.captureText}
-              />
-            </View>
-          ) : (
-            <View style={styles.previewImageWrap}>
-              <Image
-                source={{ uri: photoUri }}
-                style={styles.previewImage}
-                resizeMode="contain"
-              />
-
-              <View pointerEvents="box-none" style={styles.overlayCenter}>
                 <AppButton
-                  label="다시 찍기"
+                  label="제품촬영"
                   onPress={openCamera}
-                  style={styles.retakeOverlayBtn}
-                  textStyle={styles.retakeOverlayText}
+                  style={styles.captureBtn}
+                  textStyle={styles.captureText}
                 />
               </View>
-            </View>
-          )}
-        </View>
+            ) : (
+              <View style={styles.previewImageWrap}>
+                <Image
+                  source={{ uri: photoUri }}
+                  style={styles.previewImage}
+                  resizeMode="contain"
+                />
 
-        {/* 입력만 스크롤 */}
-        <ScrollView
-          style={styles.formScroll}
-          contentContainerStyle={styles.formScrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.formCard}>
+                <View pointerEvents="box-none" style={styles.overlayCenter}>
+                  <AppButton
+                    label="다시 찍기"
+                    onPress={openCamera}
+                    style={styles.retakeOverlayBtn}
+                    textStyle={styles.retakeOverlayText}
+                  />
+                </View>
+              </View>
+            )}
+          </View>
+
+          {/* 입력 카드 */}
+          <View style={[styles.formCard, { marginTop: 12 }]}>
             <Text style={styles.label}>상품명</Text>
 
             <View style={styles.inputWrap}>
               <TextInput
+                ref={nameInputRef}
                 value={name}
                 onChangeText={setName}
                 placeholder="예) 진라면 매운맛"
                 placeholderTextColor={colors.textSubtle}
                 style={styles.input}
-                returnKeyType="next"
+                returnKeyType="done"
                 autoCorrect={false}
                 autoCapitalize="none"
+                onFocus={() => setTimeout(ensureVisible, 0)}
+                onSubmitEditing={() => Keyboard.dismiss()}
               />
             </View>
 
-            {/* ✅ requireExpiry일 때만 유통기한 섹션 표시 */}
             {requireExpiry && (
               <>
                 <Text style={[styles.label, { marginTop: 10 }]}>유통기한</Text>
@@ -211,8 +288,8 @@ export default function NewProductFullScreen({
           </View>
         </ScrollView>
 
-        {/* 저장 버튼 하단 고정 */}
-        <View style={styles.footerFixed}>
+        {/* 하단 버튼(고정) */}
+        <View style={styles.footerFixed} onLayout={onFooterLayout}>
           <AppButton
             label={saving ? '저장 중...' : '저장'}
             disabled={!canSave}
@@ -231,9 +308,7 @@ export default function NewProductFullScreen({
                 await onSave({
                   photoUri,
                   name: name.trim(),
-                  expiryDate: requireExpiry
-                    ? formatYMD(expiryDate!)
-                    : undefined,
+                  expiryDate: requireExpiry ? formatYMD(expiryDate!) : undefined,
                 });
                 ToastAndroid.show('저장했습니다', ToastAndroid.SHORT);
               } finally {
@@ -296,7 +371,7 @@ export default function NewProductFullScreen({
             </View>
           </View>
         </Modal>
-      </View>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }

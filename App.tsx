@@ -56,6 +56,9 @@ export default function App() {
   const [listQuery, setListQuery] = useState('');
   const [listDateFilter, setListDateFilter] = useState<string | null>(null);
 
+  // ✅ 보관함(마스터) 검색어
+  const [masterQuery, setMasterQuery] = useState('');
+
   // 등록 흐름(스캔)
   const [barcode, setBarcode] = useState<string | null>(null);
   const [productId, setProductId] = useState<number | null>(null);
@@ -216,6 +219,9 @@ export default function App() {
           return (
             <MasterListScreen
               reloadSignal={masterReload}
+              // ✅ 검색어를 App에서 제어 (스캔 결과 자동 입력용)
+              query={masterQuery}
+              onQueryChange={setMasterQuery}
               onBack={() => setStep(STEPS.LIST)}
               onScanBarcode={() => setStep(STEPS.MASTER_SCAN)}
               onEdit={p => {
@@ -234,34 +240,36 @@ export default function App() {
               onBack={() => setStep(STEPS.MASTER_LIST)}
               onScanned={async code => {
                 const found = await getMasterByBarcode(code);
+
                 if (found) {
-                  setEditingMaster(found);
-                  setMasterEditUri(null);
-                  setStep(STEPS.MASTER_EDIT);
-                } else {
-                  Alert.alert(
-                    '상품 없음',
-                    '해당 바코드의 상품이 [보관함]에 없습니다. 새로 등록하시겠습니까?',
-                    [
-                      { text: '취소', style: 'cancel' },
-                      {
-                        text: '새로 등록',
-                        onPress: () => {
-                          console.log(
-                            '[PATH] MASTER_SCAN -> NEW_PRODUCT_FULL (requireExpiry=false)',
-                          );
-                          setBarcode(code);
-
-                          // ✅ 보관함에서 등록: 유통기한 없이 마스터만 저장
-                          setNewProductFrom('MASTER');
-                          setNewProductRequireExpiry(false);
-
-                          setStep(STEPS.NEW_PRODUCT_FULL);
-                        },
-                      },
-                    ],
-                  );
+                  // ✅ 수정화면으로 가지 말고 보관함으로 돌아가서 검색창에 바코드 자동 입력
+                  setMasterQuery(code);
+                  setStep(STEPS.MASTER_LIST);
+                  return;
                 }
+
+                Alert.alert(
+                  '상품 없음',
+                  '해당 바코드의 상품이 [보관함]에 없습니다. 새로 등록하시겠습니까?',
+                  [
+                    { text: '취소', style: 'cancel' },
+                    {
+                      text: '새로 등록',
+                      onPress: () => {
+                        console.log(
+                          '[PATH] MASTER_SCAN -> NEW_PRODUCT_FULL (requireExpiry=false)',
+                        );
+                        setBarcode(code);
+
+                        // ✅ 보관함에서 등록: 유통기한 없이 마스터만 저장
+                        setNewProductFrom('MASTER');
+                        setNewProductRequireExpiry(false);
+
+                        setStep(STEPS.NEW_PRODUCT_FULL);
+                      },
+                    },
+                  ],
+                );
               }}
             />
           );
@@ -431,9 +439,7 @@ export default function App() {
               requireExpiry={newProductRequireExpiry}
               onBack={goBackFromNewProduct}
               onSave={async ({ photoUri, name, expiryDate }) => {
-                const { mainUri, thumbUri } = await createResizedImages(
-                  photoUri,
-                );
+                const { mainUri, thumbUri } = await createResizedImages(photoUri);
 
                 const id = await upsertMasterProduct({
                   barcode,
@@ -522,9 +528,7 @@ export default function App() {
                 await updateInventoryExpiry(editing.inventoryId, expiryDate);
 
                 if (editUri) {
-                  const { mainUri, thumbUri } = await createResizedImages(
-                    editUri,
-                  );
+                  const { mainUri, thumbUri } = await createResizedImages(editUri);
                   await updateMasterPhoto(editing.productId, mainUri, thumbUri);
                   setMasterReload(s => s + 1);
                 }

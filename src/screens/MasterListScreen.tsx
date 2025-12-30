@@ -41,6 +41,10 @@ type Props = {
   onEdit: (p: MasterProduct) => void;
   reloadSignal: number;
   onScanBarcode: () => void;
+
+  // ✅ App.tsx에서 제어하는 검색어
+  query: string;
+  onQueryChange: (q: string) => void;
 };
 
 export default function MasterListScreen({
@@ -48,9 +52,12 @@ export default function MasterListScreen({
   onEdit,
   reloadSignal,
   onScanBarcode,
+  query,
+  onQueryChange,
 }: Props) {
   const [items, setItems] = useState<MasterProduct[]>([]);
-  const [query, setQuery] = useState('');
+
+  // ✅ 입력창에 보이는 값(디바운스용)
   const [draftQuery, setDraftQuery] = useState('');
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -73,20 +80,22 @@ export default function MasterListScreen({
     load();
   }, [load, reloadSignal]);
 
+  // ✅ 외부 query(스캔 결과 포함)가 바뀌면 입력창도 따라가기
   useEffect(() => {
     setDraftQuery(query);
   }, [query]);
 
+  // ✅ 디바운스 후 외부 query 갱신
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      if (draftQuery !== query) setQuery(draftQuery);
+      if (draftQuery !== query) onQueryChange(draftQuery);
     }, DEBOUNCE_MS);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [draftQuery, query]);
+  }, [draftQuery, query, onQueryChange]);
 
   const filtered = useMemo(() => {
     const raw = query.trim();
@@ -114,7 +123,7 @@ export default function MasterListScreen({
   const clearQuery = () => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     setDraftQuery('');
-    setQuery('');
+    onQueryChange('');
   };
 
   const confirmDelete = (p: MasterProduct) => {
@@ -137,7 +146,7 @@ export default function MasterListScreen({
     );
   };
 
-  //백업 및 복원 핸들러
+  // 백업 및 복원 핸들러
   const onBackupZip = async () => {
     try {
       const ok = await exportFullBackupZipToDownloads();
@@ -153,8 +162,8 @@ export default function MasterListScreen({
     try {
       const ok = await importFullBackupZipFromPicker();
       if (ok) {
-        await load(); // ✅ 추가
-        clearQuery(); // (선택) 검색어 초기화
+        await load();
+        clearQuery();
         Alert.alert('복원 완료', '목록을 갱신했습니다.');
       }
     } catch (e: any) {
@@ -201,7 +210,6 @@ export default function MasterListScreen({
           )}
         </View>
 
-        {/* ✅ 카드 액션: ListScreen과 동일한 아이콘 패턴 */}
         <View style={styles.actionsCol}>
           <TouchableOpacity
             style={[styles.iconBtn, styles.iconBtnEdit]}
